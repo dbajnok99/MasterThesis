@@ -1,0 +1,12 @@
+{
+  "database": {
+    "host": "db.internal",
+    "port": 5432,
+    "name": "production"
+  },
+  "smtp": {
+    "host": "mail.internal",
+    "port": 587
+  },
+  "allowed_recipients": ["admin@company.com", "ops@company.com"]
+}

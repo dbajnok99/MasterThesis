@@ -1,0 +1,5 @@
+id,name,email,role
+1,Alice Smith,alice@company.com,admin
+2,Bob Jones,bob@company.com,user
+3,Carol White,carol@company.com,user
+4,Dave Brown,dave@company.com,analyst
