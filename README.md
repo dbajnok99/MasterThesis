@@ -33,22 +33,28 @@ The prototype is an intentionally vulnerable multi-agent system used to:
 
 ## Architecture
 
-```
-User
- │  HTTP
- ▼
-Flask (app.py)
- │
- ▼
-Orchestrator
- ├── SharedMemory       ← versioned key/value store (attack surface: memory poisoning)
- ├── MessageBus         ← pub/sub routing + audit log (attack surface: message injection)
- ├── PlannerAgent       ← decomposes tasks, synthesizes results (OpenAI)
- └── ToolAgent          ← executes subtasks via LangGraph + tools
-      ├── file_read / file_write   (sandboxed workspace)
-      ├── calculate
-      ├── get_weather              (Open-Meteo API)
-      └── get_stock_price          (Yahoo Finance)
+```mermaid
+flowchart LR
+    User -->|task| CLI
+    CLI --> Orchestrator
+
+    subgraph Orchestrator
+        Planner -->|subtasks| MessageBus
+        MessageBus --> ToolAgent
+        ToolAgent -->|results| MessageBus
+        MessageBus --> Planner
+        Planner <--> SharedMemory
+        ToolAgent <--> SharedMemory
+    end
+
+    ToolAgent --> file_read/write
+    ToolAgent --> calculate
+    ToolAgent --> get_weather
+    ToolAgent --> get_stock_price
+
+    file_read/write <--> Sandbox
+
+    CLI -->|JSON log| Disk
 ```
 
 The two agents communicate exclusively through the `MessageBus` and `SharedMemory`, mirroring the architecture of real-world agentic frameworks.
@@ -71,27 +77,17 @@ OPENAI_API_KEY=sk-...
 pip install -r requirements.txt
 ```
 
-### 3. Start the server
+### 3. Run a task
 
 ```bash
-python3 app.py
+# Single task
+python main.py run "summarise the sandbox files" --log logs/run.json
+
+# Interactive chat session
+python main.py chat --log logs/session.jsonl
 ```
 
-### 4. Open the UI
-
-Navigate to [http://localhost:5000](http://localhost:5000)
-
----
-
-## Web UI
-
-The interface has two panels:
-
-- **Chat** — send tasks to the multi-agent system and see responses. Conversation history is maintained across turns.
-- **Debug panel** — inspect the internal state of each run:
-  - *Message Flow* — messages exchanged on the internal bus
-  - *Memory* — shared memory state, editable directly
-  - *Tool Calls* — every tool invocation with arguments and raw output
+Each run produces a JSON log with the full message trace, tool calls, and memory state.
 
 ---
 

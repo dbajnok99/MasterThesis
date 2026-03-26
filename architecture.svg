@@ -1,0 +1,116 @@
+<svg width="1150" height="480" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#555"/>
+    </marker>
+    <marker id="arr-rev" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+      <polygon points="10 0, 0 3.5, 10 7" fill="#555"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="2" dy="3" stdDeviation="4" flood-color="#00000022"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1150" height="480" fill="#F4F7FC"/>
+
+  <!-- Orchestrator box -->
+  <rect x="285" y="30" width="525" height="420" rx="18" fill="#EBF5FB" stroke="#AEB6BF" stroke-width="2" stroke-dasharray="9,5"/>
+  <text x="547" y="58" text-anchor="middle" font-size="13" fill="#7F8C8D" font-weight="bold" letter-spacing="1">ORCHESTRATOR</text>
+
+  <!-- ── User ── -->
+  <circle cx="68" cy="240" r="46" fill="#E74C3C" filter="url(#shadow)"/>
+  <text x="68" y="236" text-anchor="middle" font-size="14" fill="white" font-weight="bold">User</text>
+
+  <!-- ── CLI ── -->
+  <rect x="148" y="212" width="118" height="56" rx="10" fill="#3498DB" filter="url(#shadow)"/>
+  <text x="207" y="237" text-anchor="middle" font-size="13" fill="white" font-weight="bold">CLI</text>
+  <text x="207" y="254" text-anchor="middle" font-size="10" fill="#D6EAF8">main.py</text>
+
+  <!-- ── JSON Log ── -->
+  <rect x="148" y="308" width="118" height="48" rx="10" fill="#7F8C8D" filter="url(#shadow)"/>
+  <text x="207" y="329" text-anchor="middle" font-size="12" fill="white" font-weight="bold">JSON Log</text>
+  <text x="207" y="346" text-anchor="middle" font-size="10" fill="#D5D8DC">per run</text>
+
+  <!-- ── PlannerAgent ── -->
+  <rect x="308" y="120" width="162" height="80" rx="12" fill="#2980B9" filter="url(#shadow)"/>
+  <text x="389" y="152" text-anchor="middle" font-size="14" fill="white" font-weight="bold">PlannerAgent</text>
+  <text x="389" y="170" text-anchor="middle" font-size="10" fill="#D6EAF8">decomposes tasks</text>
+  <text x="389" y="185" text-anchor="middle" font-size="10" fill="#D6EAF8">synthesizes results</text>
+
+  <!-- ── MessageBus ── -->
+  <rect x="495" y="140" width="148" height="55" rx="12" fill="#E67E22" filter="url(#shadow)"/>
+  <text x="569" y="163" text-anchor="middle" font-size="13" fill="white" font-weight="bold">MessageBus</text>
+  <text x="569" y="180" text-anchor="middle" font-size="10" fill="#FDEBD0">pub/sub · audit log</text>
+
+  <!-- ── ToolAgent ── -->
+  <rect x="666" y="120" width="122" height="80" rx="12" fill="#8E44AD" filter="url(#shadow)"/>
+  <text x="727" y="152" text-anchor="middle" font-size="14" fill="white" font-weight="bold">ToolAgent</text>
+  <text x="727" y="170" text-anchor="middle" font-size="10" fill="#E8DAEF">agentic loop</text>
+  <text x="727" y="185" text-anchor="middle" font-size="10" fill="#E8DAEF">LangGraph</text>
+
+  <!-- ── SharedMemory ── -->
+  <rect x="440" y="305" width="215" height="75" rx="12" fill="#27AE60" filter="url(#shadow)"/>
+  <text x="547" y="334" text-anchor="middle" font-size="14" fill="white" font-weight="bold">SharedMemory</text>
+  <text x="547" y="352" text-anchor="middle" font-size="10" fill="#D5F5E3">versioned key-value store</text>
+  <text x="547" y="368" text-anchor="middle" font-size="10" fill="#D5F5E3">audit trail</text>
+
+  <!-- ── Tools ── -->
+  <rect x="838" y="88"  width="168" height="48" rx="10" fill="#16A085" filter="url(#shadow)"/>
+  <text x="922" y="108" text-anchor="middle" font-size="12" fill="white" font-weight="bold">file_read / file_write</text>
+  <text x="922" y="126" text-anchor="middle" font-size="10" fill="#A3E4D7">sandboxed workspace</text>
+
+  <rect x="838" y="152" width="168" height="48" rx="10" fill="#16A085" filter="url(#shadow)"/>
+  <text x="922" y="176" text-anchor="middle" font-size="13" fill="white" font-weight="bold">calculate</text>
+  <text x="922" y="192" text-anchor="middle" font-size="10" fill="#A3E4D7">arithmetic expressions</text>
+
+  <rect x="838" y="216" width="168" height="48" rx="10" fill="#16A085" filter="url(#shadow)"/>
+  <text x="922" y="240" text-anchor="middle" font-size="13" fill="white" font-weight="bold">get_weather</text>
+  <text x="922" y="256" text-anchor="middle" font-size="10" fill="#A3E4D7">Open-Meteo API</text>
+
+  <rect x="838" y="280" width="168" height="48" rx="10" fill="#16A085" filter="url(#shadow)"/>
+  <text x="922" y="304" text-anchor="middle" font-size="13" fill="white" font-weight="bold">get_stock_price</text>
+  <text x="922" y="320" text-anchor="middle" font-size="10" fill="#A3E4D7">Yahoo Finance</text>
+
+  <!-- ── Sandbox ── -->
+  <rect x="1025" y="88" width="108" height="48" rx="10" fill="#C0392B" filter="url(#shadow)"/>
+  <text x="1079" y="108" text-anchor="middle" font-size="12" fill="white" font-weight="bold">Sandbox</text>
+  <text x="1079" y="124" text-anchor="middle" font-size="10" fill="#FADBD8">credentials, users</text>
+
+  <!-- ════ Arrows ════ -->
+
+  <!-- User → CLI -->
+  <line x1="114" y1="240" x2="146" y2="240" stroke="#555" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- CLI → Orchestrator -->
+  <line x1="266" y1="240" x2="283" y2="240" stroke="#555" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- CLI → Log (dashed) -->
+  <line x1="207" y1="268" x2="207" y2="306" stroke="#999" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+
+  <!-- Planner ↔ MessageBus -->
+  <line x1="470" y1="165" x2="493" y2="165" stroke="#555" stroke-width="2"
+        marker-start="url(#arr-rev)" marker-end="url(#arr)"/>
+
+  <!-- MessageBus ↔ ToolAgent -->
+  <line x1="643" y1="165" x2="664" y2="165" stroke="#555" stroke-width="2"
+        marker-start="url(#arr-rev)" marker-end="url(#arr)"/>
+
+  <!-- Planner ↔ SharedMemory -->
+  <line x1="389" y1="200" x2="480" y2="303" stroke="#555" stroke-width="1.5"
+        marker-start="url(#arr-rev)" marker-end="url(#arr)"/>
+
+  <!-- ToolAgent ↔ SharedMemory -->
+  <line x1="727" y1="200" x2="618" y2="303" stroke="#555" stroke-width="1.5"
+        marker-start="url(#arr-rev)" marker-end="url(#arr)"/>
+
+  <!-- ToolAgent → Tools (fan out from right edge center) -->
+  <line x1="788" y1="152" x2="836" y2="112" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="788" y1="163" x2="836" y2="176" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="788" y1="174" x2="836" y2="240" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="788" y1="180" x2="836" y2="304" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- file_read/write → Sandbox -->
+  <line x1="1006" y1="112" x2="1023" y2="112" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+
+</svg>
