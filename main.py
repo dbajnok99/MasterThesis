@@ -35,7 +35,7 @@ def _snapshot(orch: Orchestrator, task: str, result: str) -> dict:
             }
             for m in orch.bus.log
         ],
-        "tool_calls": list(orch.tool_agent.tool_calls),
+        "tool_calls": list(orch.mcp_agent.tool_calls) + list(orch.fs_agent.tool_calls),
         "memory": {
             k: {"value": v.value, "version": v.version, "owner": v.owner_id}
             for k, v in orch.memory.get_all().items()
@@ -54,7 +54,8 @@ def _save(path: Path, data: dict, append: bool = False) -> None:
 
 def _clear_run_state(orch: Orchestrator) -> None:
     orch.bus.log.clear()
-    orch.tool_agent.tool_calls.clear()
+    orch.mcp_agent.tool_calls.clear()
+    orch.fs_agent.tool_calls.clear()
 
 
 # ── Commands ───────────────────────────────────────────────────────────────────

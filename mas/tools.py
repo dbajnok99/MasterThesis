@@ -1,10 +1,9 @@
 """
-Tools available to the ToolAgent via LangChain.
+Tools available to the FSAgent and MCPToolAgent via LangChain.
 
 Two categories:
-  - Sandbox tools  : file_read, file_write, calculate  (local, sandboxed)
-  - External APIs  : get_weather (Open-Meteo, free, no key)
-                     get_stock_price (Yahoo Finance via yfinance, free, no key)
+  - FS_TOOLS  (FSAgent)      : file_read, file_write  (sandbox-scoped)
+  - MCP_TOOLS (MCPToolAgent) : calculate, get_weather, get_stock_price
 """
 from __future__ import annotations
 
@@ -157,6 +156,8 @@ def get_stock_price(ticker: str) -> str:
         return f"ERROR fetching stock data for {ticker!r}: {e}"
 
 
-# ── Registry ──────────────────────────────────────────────────────────────────
+# ── Registries ────────────────────────────────────────────────────────────────
 
-ALL_TOOLS = [file_read, file_write, calculate, get_weather, get_stock_price]
+FS_TOOLS  = [file_read, file_write]
+MCP_TOOLS = [calculate, get_weather, get_stock_price]
+ALL_TOOLS = FS_TOOLS + MCP_TOOLS

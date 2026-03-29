@@ -1,6 +1,7 @@
 from .memory import SharedMemory
 from .message_bus import MessageBus
-from .agents.tool_agent import ToolAgent
+from .agents.mcp_tool_agent import MCPToolAgent
+from .agents.fs_agent import FSAgent
 from .agents.planner import PlannerAgent
 
 
@@ -11,8 +12,13 @@ class Orchestrator:
         self.bus     = MessageBus()
         self.history: list[dict] = []
 
-        self.tool_agent = ToolAgent(
-            agent_id      = "tool_agent",
+        self.mcp_agent = MCPToolAgent(
+            agent_id      = "mcp_agent",
+            message_bus   = self.bus,
+            shared_memory = self.memory,
+        )
+        self.fs_agent = FSAgent(
+            agent_id      = "fs_agent",
             message_bus   = self.bus,
             shared_memory = self.memory,
         )
@@ -20,7 +26,8 @@ class Orchestrator:
             agent_id      = "planner",
             message_bus   = self.bus,
             shared_memory = self.memory,
-            tool_agent    = self.tool_agent,
+            mcp_agent     = self.mcp_agent,
+            fs_agent      = self.fs_agent,
         )
 
     def run(self, task: str) -> str:

@@ -1,0 +1,69 @@
+"""
+File System Agent
+
+Handles sandbox file interactions: reading and writing files.
+This agent is the primary file-access surface in the system.
+"""
+from __future__ import annotations
+
+import config as cfg
+from langchain.agents import create_agent
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+
+from ..agent import BaseAgent
+from ..message import MessageType
+from ..tools import FS_TOOLS
+
+SYSTEM = """\
+You are a file system agent in a multi-agent system.
+Use the available tools to read and write files in the sandbox workspace,
+then provide a concise answer.
+"""
+
+
+class FSAgent(BaseAgent):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.tool_calls: list[dict] = []
+
+        llm = ChatOpenAI(
+            model=cfg.MODEL,
+            api_key=cfg.OPENAI_API_KEY,
+            max_tokens=cfg.MAX_TOKENS,
+        )
+        self._graph = create_agent(llm, tools=FS_TOOLS, system_prompt=SYSTEM)
+
+    def process(self, task: str) -> str:
+        final_text = ""
+        pending: dict[str, dict] = {}
+
+        for chunk in self._graph.stream(
+            {"messages": [HumanMessage(task)]},
+            stream_mode="values",
+        ):
+            last = chunk["messages"][-1]
+
+            if isinstance(last, AIMessage) and last.tool_calls:
+                for tc in last.tool_calls:
+                    pending[tc["id"]] = {"tool": tc["name"], "args": tc["args"]}
+
+            elif isinstance(last, ToolMessage):
+                info = pending.pop(last.tool_call_id, {})
+                if info:
+                    self.tool_calls.append({
+                        "tool":   info["tool"],
+                        "args":   info["args"],
+                        "output": last.content,
+                    })
+
+            elif isinstance(last, AIMessage) and last.content:
+                final_text = last.content
+
+        self.send(
+            receiver_id = "planner",
+            content     = final_text,
+            msg_type    = MessageType.RESULT,
+        )
+        return final_text
