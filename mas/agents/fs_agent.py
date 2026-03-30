@@ -46,17 +46,17 @@ class FSAgent(BaseAgent):
             last = chunk["messages"][-1]
 
             if isinstance(last, AIMessage) and last.tool_calls:
+                reasoning = last.content or ""
                 for tc in last.tool_calls:
-                    pending[tc["id"]] = {"tool": tc["name"], "args": tc["args"]}
+                    pending[tc["id"]] = {"tool": tc["name"], "args": tc["args"], "reasoning": reasoning}
 
             elif isinstance(last, ToolMessage):
                 info = pending.pop(last.tool_call_id, {})
                 if info:
-                    self.tool_calls.append({
-                        "tool":   info["tool"],
-                        "args":   info["args"],
-                        "output": last.content,
-                    })
+                    entry = {"tool": info["tool"], "args": info["args"], "output": last.content}
+                    if info.get("reasoning"):
+                        entry["reasoning"] = info["reasoning"]
+                    self.tool_calls.append(entry)
 
             elif isinstance(last, AIMessage) and last.content:
                 final_text = last.content

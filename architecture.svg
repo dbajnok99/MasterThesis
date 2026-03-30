@@ -61,28 +61,32 @@
   <text x="527" y="452" text-anchor="middle" font-size="10" fill="#D5F5E3">versioned key-value store</text>
   <text x="527" y="468" text-anchor="middle" font-size="10" fill="#D5F5E3">audit trail</text>
 
-  <!-- ── MCP Tools ── -->
-  <rect x="965" y="100" width="165" height="45" rx="10" fill="#16A085" filter="url(#shadow)"/>
-  <text x="1047" y="120" text-anchor="middle" font-size="12" fill="white" font-weight="bold">calculate</text>
+  <!-- ── MCP Tools (h=55 each, 8px gap) ── -->
+  <!-- calculate: y=95, center=122 -->
+  <rect x="965" y="95" width="165" height="55" rx="10" fill="#16A085" filter="url(#shadow)"/>
+  <text x="1047" y="118" text-anchor="middle" font-size="12" fill="white" font-weight="bold">calculate</text>
   <text x="1047" y="136" text-anchor="middle" font-size="10" fill="#A3E4D7">arithmetic expressions</text>
 
-  <rect x="965" y="155" width="165" height="45" rx="10" fill="#16A085" filter="url(#shadow)"/>
-  <text x="1047" y="175" text-anchor="middle" font-size="12" fill="white" font-weight="bold">get_weather</text>
-  <text x="1047" y="191" text-anchor="middle" font-size="10" fill="#A3E4D7">Open-Meteo API</text>
+  <!-- get_weather: y=158, center=185 -->
+  <rect x="965" y="158" width="165" height="55" rx="10" fill="#16A085" filter="url(#shadow)"/>
+  <text x="1047" y="181" text-anchor="middle" font-size="12" fill="white" font-weight="bold">get_weather</text>
+  <text x="1047" y="199" text-anchor="middle" font-size="10" fill="#A3E4D7">Open-Meteo API</text>
 
-  <rect x="965" y="210" width="165" height="45" rx="10" fill="#16A085" filter="url(#shadow)"/>
-  <text x="1047" y="230" text-anchor="middle" font-size="12" fill="white" font-weight="bold">get_stock_price</text>
-  <text x="1047" y="246" text-anchor="middle" font-size="10" fill="#A3E4D7">Yahoo Finance</text>
+  <!-- get_stock_price: y=221, center=248 -->
+  <rect x="965" y="221" width="165" height="55" rx="10" fill="#16A085" filter="url(#shadow)"/>
+  <text x="1047" y="244" text-anchor="middle" font-size="12" fill="white" font-weight="bold">get_stock_price</text>
+  <text x="1047" y="262" text-anchor="middle" font-size="10" fill="#A3E4D7">Yahoo Finance</text>
 
-  <!-- ── FS Tools ── -->
-  <rect x="965" y="305" width="165" height="45" rx="10" fill="#16A085" filter="url(#shadow)"/>
-  <text x="1047" y="325" text-anchor="middle" font-size="12" fill="white" font-weight="bold">file_read / file_write</text>
-  <text x="1047" y="341" text-anchor="middle" font-size="10" fill="#A3E4D7">sandboxed workspace</text>
+  <!-- ── FS Tools (h=70 for 3 lines, y=305, center=340) ── -->
+  <rect x="965" y="305" width="165" height="70" rx="10" fill="#16A085" filter="url(#shadow)"/>
+  <text x="1047" y="325" text-anchor="middle" font-size="12" fill="white" font-weight="bold">list_files</text>
+  <text x="1047" y="343" text-anchor="middle" font-size="12" fill="white" font-weight="bold">file_read · file_write</text>
+  <text x="1047" y="362" text-anchor="middle" font-size="10" fill="#A3E4D7">sandboxed workspace</text>
 
-  <!-- ── Sandbox ── -->
-  <rect x="1150" y="305" width="112" height="45" rx="10" fill="#C0392B" filter="url(#shadow)"/>
-  <text x="1206" y="325" text-anchor="middle" font-size="12" fill="white" font-weight="bold">Sandbox</text>
-  <text x="1206" y="341" text-anchor="middle" font-size="10" fill="#FADBD8">credentials, users</text>
+  <!-- ── Sandbox (h=55, centered on y=340) ── -->
+  <rect x="1150" y="313" width="118" height="55" rx="10" fill="#C0392B" filter="url(#shadow)"/>
+  <text x="1209" y="336" text-anchor="middle" font-size="12" fill="white" font-weight="bold">Sandbox</text>
+  <text x="1209" y="354" text-anchor="middle" font-size="10" fill="#FADBD8">credentials, users</text>
 
   <!-- ════ Arrows ════ -->
 
@@ -119,15 +123,15 @@
   <line x1="730" y1="375" x2="618" y2="407" stroke="#555" stroke-width="1.5"
         marker-start="url(#arr-rev)" marker-end="url(#arr)"/>
 
-  <!-- MCPToolAgent → Tools (fan out) -->
+  <!-- MCPToolAgent → Tools (fan out from right edge, center y=165) -->
   <line x1="840" y1="148" x2="963" y2="122" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
-  <line x1="840" y1="163" x2="963" y2="177" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
-  <line x1="840" y1="178" x2="963" y2="232" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="840" y1="165" x2="963" y2="185" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="840" y1="180" x2="963" y2="248" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
 
-  <!-- FSAgent → file tools -->
-  <line x1="840" y1="327" x2="963" y2="327" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- FSAgent → FS tools -->
+  <line x1="840" y1="335" x2="963" y2="340" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
 
-  <!-- file tools → Sandbox -->
-  <line x1="1130" y1="327" x2="1148" y2="327" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- FS tools → Sandbox -->
+  <line x1="1130" y1="340" x2="1148" y2="340" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
 
 </svg>

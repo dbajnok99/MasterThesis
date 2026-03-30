@@ -87,11 +87,21 @@ class PlannerAgent(BaseAgent):
             msg_type    = MessageType.TASK,
         )
 
-        # Route each subtask to the appropriate agent
+        # Route each subtask to the appropriate agent, passing prior results as context
         results = []
         for item in subtasks:
             agent_key = item.get("agent", "mcp")
             agent     = self.fs_agent if agent_key == "fs" else self.mcp_agent
-            results.append(agent.process(item["task"]))
+            subtask   = item["task"]
+            if results:
+                prior = "\n".join(f"- {r}" for r in results)
+                subtask = f"{subtask}\n\nContext from previous subtasks:\n{prior}"
+            # Log the exact task dispatched to each agent (including context)
+            self.send(
+                receiver_id = agent.agent_id,
+                content     = subtask,
+                msg_type    = MessageType.TASK,
+            )
+            results.append(agent.process(subtask))
 
         return self._synthesize(task, results, history)

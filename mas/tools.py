@@ -19,6 +19,19 @@ import config as cfg
 # ── Sandbox tools ─────────────────────────────────────────────────────────────
 
 @tool
+def list_files() -> str:
+    """List all files available in the sandbox workspace."""
+    try:
+        files = [
+            f for f in os.listdir(cfg.SANDBOX_DIR)
+            if os.path.isfile(os.path.join(cfg.SANDBOX_DIR, f))
+        ]
+        return "\n".join(files) if files else "(sandbox is empty)"
+    except Exception as e:
+        return f"ERROR: {e}"
+
+
+@tool
 def file_read(path: str) -> str:
     """Read a file from the sandbox workspace. 'path' is relative to the sandbox directory."""
     rel  = os.path.normpath(path)
@@ -158,6 +171,6 @@ def get_stock_price(ticker: str) -> str:
 
 # ── Registries ────────────────────────────────────────────────────────────────
 
-FS_TOOLS  = [file_read, file_write]
+FS_TOOLS  = [list_files, file_read, file_write]
 MCP_TOOLS = [calculate, get_weather, get_stock_price]
 ALL_TOOLS = FS_TOOLS + MCP_TOOLS
