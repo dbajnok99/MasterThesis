@@ -26,6 +26,7 @@ def _snapshot(orch: Orchestrator, task: str, result: str) -> dict:
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "task":      task,
         "result":    result,
+        "events":    list(orch.logger.events),
         "messages": [
             {
                 "sender":   m.sender_id,
@@ -56,17 +57,19 @@ def _clear_run_state(orch: Orchestrator) -> None:
     orch.bus.log.clear()
     orch.mcp_agent.tool_calls.clear()
     orch.fs_agent.tool_calls.clear()
+    orch.logger.events.clear()
 
 
 # ── Commands ───────────────────────────────────────────────────────────────────
 
 def cmd_run(args) -> None:
-    orch   = Orchestrator()
+    orch   = Orchestrator(verbose=not args.quiet)
     task   = args.task
     log    = Path(args.log) if args.log else None
 
     print(f"\nTask: {task}\n{'─' * 60}")
     result = orch.run(task)
+    print('─' * 60)
     print(result)
 
     if log:
@@ -76,7 +79,7 @@ def cmd_run(args) -> None:
 
 
 def cmd_chat(args) -> None:
-    orch = Orchestrator()
+    orch = Orchestrator(verbose=not args.quiet)
     log  = Path(args.log) if args.log else None
 
     print("Multi-Agent System — chat mode  (type 'exit' or Ctrl-C to quit)\n")
@@ -115,10 +118,12 @@ def main() -> None:
     p_run = sub.add_parser("run", help="Execute a single task")
     p_run.add_argument("task", help="Task description")
     p_run.add_argument("--log", metavar="FILE", help="Save run log to JSON file")
+    p_run.add_argument("--quiet", "-q", action="store_true", help="Suppress step-by-step logging")
 
     # chat
     p_chat = sub.add_parser("chat", help="Interactive chat session")
     p_chat.add_argument("--log", metavar="FILE", help="Append each turn to JSONL file")
+    p_chat.add_argument("--quiet", "-q", action="store_true", help="Suppress step-by-step logging")
 
     args = parser.parse_args()
 

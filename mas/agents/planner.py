@@ -22,13 +22,18 @@ SYSTEM = """\
 You are a planning agent in a multi-agent system.
 
 You have two specialist agents available:
-  - "mcp"  : handles weather lookups, stock prices, and calculations
-  - "fs"   : handles reading and writing files in the sandbox
+  - "mcp" : handles weather lookups, stock prices, and calculations
+  - "fs"  : handles reading and writing files in the sandbox
 
-When decomposing a task, respond with ONLY valid JSON:
-{"subtasks": [{"task": "subtask description", "agent": "mcp|fs"}, ...]}
+Rules for decomposing a task:
+1. Every action the user requests MUST appear as its own subtask — never skip or merge steps.
+2. If the user asks to write, save, or store something to a file, that write MUST be a separate "fs" subtask.
+3. Do NOT perform or simulate any action yourself — only plan. Never claim a file was written unless an "fs" subtask will do it.
+4. Subtasks run sequentially. Later subtasks can rely on earlier results stored in shared memory.
+5. Respond with ONLY valid JSON, no markdown:
+   {"subtasks": [{"task": "subtask description", "agent": "mcp|fs"}, ...]}
 
-When synthesizing results, write a clear, concise final answer.
+When synthesizing results, write a clear, concise final answer based only on what the subtasks actually did.
 """
 
 
@@ -39,21 +44,14 @@ class PlannerAgent(BaseAgent):
         self.mcp_agent = mcp_agent
         self.fs_agent  = fs_agent
 
-    def _memory_context(self) -> str:
-        entries = self.memory.get_all()
-        if not entries:
-            return ""
-        lines = ["Shared memory:"]
-        for key, entry in entries.items():
-            lines.append(f"  [{key}]: {entry.value}")
-        return "\n".join(lines)
-
     def _decompose(self, task: str, history: list[dict]) -> list[dict]:
-        ctx     = self._memory_context()
+        ctx = self.memory_context()
+        self.log.memory_context_used(self.agent_id, list(self.memory.get_all().keys()))
         content = f"{ctx}\n\nTask: {task}" if ctx else task
         response = self.call_llm(
             messages=history + [{"role": "user", "content": content}],
             system=SYSTEM,
+            purpose="decomposing task into subtasks",
         )
         raw = self.extract_text(response)
         try:
@@ -73,12 +71,18 @@ class PlannerAgent(BaseAgent):
             messages=history + [{"role": "user", "content":
                        f"Original task: {task}\n\nSubtask results:\n{results_text}"}],
             system=SYSTEM + "\nYou are now synthesizing the results into a final answer.",
+            purpose="synthesizing final answer",
         )
         return self.extract_text(response)
 
     def process(self, task: str, history: list[dict] | None = None) -> str:
         history  = history or []
+        self.log.task_received(self.agent_id, task)
+
         subtasks = self._decompose(task, history)
+
+        # Persist the plan so agents and future calls have full visibility
+        self.memory.write("plan:current", json.dumps(subtasks), self.agent_id)
 
         # Log decomposition on the bus
         self.send(
@@ -87,16 +91,14 @@ class PlannerAgent(BaseAgent):
             msg_type    = MessageType.TASK,
         )
 
-        # Route each subtask to the appropriate agent, passing prior results as context
+        # Route each subtask; each agent reads shared memory for prior context itself
         results = []
         for item in subtasks:
             agent_key = item.get("agent", "mcp")
             agent     = self.fs_agent if agent_key == "fs" else self.mcp_agent
             subtask   = item["task"]
-            if results:
-                prior = "\n".join(f"- {r}" for r in results)
-                subtask = f"{subtask}\n\nContext from previous subtasks:\n{prior}"
-            # Log the exact task dispatched to each agent (including context)
+
+            self.log.subtask_dispatch(self.agent_id, agent.agent_id, subtask)
             self.send(
                 receiver_id = agent.agent_id,
                 content     = subtask,
@@ -104,4 +106,6 @@ class PlannerAgent(BaseAgent):
             )
             results.append(agent.process(subtask))
 
-        return self._synthesize(task, results, history)
+        final = self._synthesize(task, results, history)
+        self.log.result(self.agent_id, final)
+        return final

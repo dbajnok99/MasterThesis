@@ -1,5 +1,6 @@
 from .memory import SharedMemory
 from .message_bus import MessageBus
+from .logger import AgentLogger
 from .agents.mcp_tool_agent import MCPToolAgent
 from .agents.fs_agent import FSAgent
 from .agents.planner import PlannerAgent
@@ -7,8 +8,9 @@ from .agents.planner import PlannerAgent
 
 class Orchestrator:
 
-    def __init__(self):
-        self.memory  = SharedMemory()
+    def __init__(self, verbose: bool = True):
+        self.logger  = AgentLogger(verbose=verbose)
+        self.memory  = SharedMemory(logger=self.logger)
         self.bus     = MessageBus()
         self.history: list[dict] = []
 
@@ -16,16 +18,19 @@ class Orchestrator:
             agent_id      = "mcp_agent",
             message_bus   = self.bus,
             shared_memory = self.memory,
+            logger        = self.logger,
         )
         self.fs_agent = FSAgent(
             agent_id      = "fs_agent",
             message_bus   = self.bus,
             shared_memory = self.memory,
+            logger        = self.logger,
         )
         self.planner = PlannerAgent(
             agent_id      = "planner",
             message_bus   = self.bus,
             shared_memory = self.memory,
+            logger        = self.logger,
             mcp_agent     = self.mcp_agent,
             fs_agent      = self.fs_agent,
         )

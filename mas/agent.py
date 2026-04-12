@@ -16,6 +16,7 @@ from openai import OpenAI
 import config as cfg
 from .message import Message, MessageType
 from .memory import SharedMemory
+from .logger import AgentLogger
 
 if TYPE_CHECKING:
     from .message_bus import MessageBus
@@ -28,10 +29,12 @@ class BaseAgent(ABC):
         agent_id:      str,
         message_bus:   "MessageBus",
         shared_memory: SharedMemory,
+        logger:        AgentLogger | None = None,
     ):
         self.agent_id = agent_id
         self.bus      = message_bus
         self.memory   = shared_memory
+        self.log      = logger or AgentLogger(verbose=False)
         self._client  = OpenAI(api_key=cfg.OPENAI_API_KEY)
 
         self.bus.register(agent_id, self._on_message)
@@ -56,11 +59,14 @@ class BaseAgent(ABC):
     # ── LLM helper ─────────────────────────────────────────────────────────
 
     def call_llm(self, messages: list[dict], system: str = "",
-                 tools: list[dict] | None = None):
+                 tools: list[dict] | None = None, purpose: str = ""):
         full_messages = []
         if system:
             full_messages.append({"role": "system", "content": system})
         full_messages.extend(messages)
+
+        if purpose:
+            self.log.llm_call(self.agent_id, purpose)
 
         kwargs: dict = dict(
             model      = cfg.MODEL,
@@ -78,6 +84,16 @@ class BaseAgent(ABC):
         return response.choices[0].message.content or ""
 
     # ── Entry point ────────────────────────────────────────────────────────
+
+    def memory_context(self) -> str:
+        """Return all shared-memory entries as a formatted string for LLM injection."""
+        entries = self.memory.get_all()
+        if not entries:
+            return ""
+        lines = ["Shared memory (results from prior subtasks):"]
+        for key, entry in entries.items():
+            lines.append(f"  [{key}] (owner: {entry.owner_id}): {entry.value}")
+        return "\n".join(lines)
 
     @abstractmethod
     def process(self, task: str) -> str:
