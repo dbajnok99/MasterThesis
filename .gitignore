@@ -15,13 +15,7 @@ logs/
 literature/
 
 # LaTeX
-expose.pdf
-expose.aux
-expose.bbl
-expose.blg
-expose.log
-expose.out
-expose.toc
+expose.*
 
 # Sandbox generated files (keep the seed files, ignore attack outputs)
 sandbox/exfil.txt
