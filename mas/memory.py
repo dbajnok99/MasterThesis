@@ -1,9 +1,4 @@
-"""
-Shared memory store.
-
-A simple key/value store that all agents can read from and write to.
-This is where agents share intermediate results and contextual information.
-"""
+"""Shared key/value store that all agents read from and write to."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -16,10 +11,10 @@ if TYPE_CHECKING:
 
 @dataclass
 class MemoryEntry:
-    key:        str
-    value:      str
-    owner_id:   str
-    version:    int      = 1
+    key: str
+    value: str
+    owner_id: str
+    version: int = 1
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -38,8 +33,8 @@ class SharedMemory:
     def write(self, key: str, value: str, writer_id: str) -> None:
         existing = self._store.get(key)
         if existing:
-            existing.value      = value
-            existing.version   += 1
+            existing.value = value
+            existing.version += 1
             existing.updated_at = datetime.now(timezone.utc)
         else:
             self._store[key] = MemoryEntry(key=key, value=value, owner_id=writer_id)

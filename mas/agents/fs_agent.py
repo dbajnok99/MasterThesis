@@ -1,9 +1,4 @@
-"""
-File System Agent
-
-Handles sandbox file interactions: reading and writing files.
-This agent is the primary file-access surface in the system.
-"""
+"""File system agent. Handles reading and writing files in the sandbox."""
 from __future__ import annotations
 
 import config as cfg
@@ -84,9 +79,5 @@ class FSAgent(BaseAgent):
                 final_text = last.content
 
         self.log.result(self.agent_id, final_text)
-        self.send(
-            receiver_id = "planner",
-            content     = final_text,
-            msg_type    = MessageType.RESULT,
-        )
+        self.send(receiver_id="planner", content=final_text, msg_type=MessageType.RESULT)
         return final_text

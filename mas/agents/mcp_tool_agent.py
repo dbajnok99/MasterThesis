@@ -1,8 +1,4 @@
-"""
-MCP Tool Agent
-
-Handles stateless external/computation tools: weather, stock prices, calculations.
-"""
+"""MCP tool agent. Handles weather, stock prices, and calculations."""
 from __future__ import annotations
 
 import config as cfg
@@ -83,9 +79,5 @@ class MCPToolAgent(BaseAgent):
                 final_text = last.content
 
         self.log.result(self.agent_id, final_text)
-        self.send(
-            receiver_id = "planner",
-            content     = final_text,
-            msg_type    = MessageType.RESULT,
-        )
+        self.send(receiver_id="planner", content=final_text, msg_type=MessageType.RESULT)
         return final_text

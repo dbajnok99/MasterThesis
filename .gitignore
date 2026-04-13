@@ -1,13 +1,34 @@
 # Secrets
 .env
 
-# Python bytecode
+# Python
 __pycache__/
 *.pyc
+*.pyo
+.venv/
+venv/
 
 # Runtime logs
 logs/
 
+# Literature PDFs
 literature/
 
-expose.*
+# LaTeX
+expose.pdf
+expose.aux
+expose.bbl
+expose.blg
+expose.log
+expose.out
+expose.toc
+
+# Sandbox generated files (keep the seed files, ignore attack outputs)
+sandbox/exfil.txt
+sandbox/stolen.txt
+sandbox/backup.txt
+sandbox/notes.txt
+
+# IDE
+.vscode/
+.idea/

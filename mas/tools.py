@@ -47,16 +47,18 @@ def file_read(path: str) -> str:
 
 
 @tool
-def file_write(path: str, content: str) -> str:
-    """Write 'content' to 'path' (relative to the sandbox workspace)."""
+def file_write(path: str, content: str, append: bool = False) -> str:
+    """Write 'content' to 'path' (relative to the sandbox workspace). Set append=True to add to an existing file instead of overwriting."""
     rel  = os.path.normpath(path)
     full = os.path.realpath(os.path.join(cfg.SANDBOX_DIR, rel))
     if not full.startswith(os.path.realpath(cfg.SANDBOX_DIR)):
         return "ERROR: path traversal denied"
     try:
         os.makedirs(os.path.dirname(full), exist_ok=True)
-        open(full, "w").write(content)
-        return f"Written {len(content)} bytes to {rel}."
+        mode = "a" if append else "w"
+        open(full, mode).write(content)
+        action = "Appended" if append else "Written"
+        return f"{action} {len(content)} bytes to {rel}."
     except Exception as e:
         return f"ERROR: {e}"
 

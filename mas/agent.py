@@ -1,11 +1,4 @@
-"""
-Base agent.
-
-Every agent has:
-  - an identity (agent_id)
-  - access to shared memory and the message bus
-  - a call_llm() helper that talks to the OpenAI API
-"""
+"""Base class for all agents in the system."""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -24,23 +17,16 @@ if TYPE_CHECKING:
 
 class BaseAgent(ABC):
 
-    def __init__(
-        self,
-        agent_id:      str,
-        message_bus:   "MessageBus",
-        shared_memory: SharedMemory,
-        logger:        AgentLogger | None = None,
-    ):
+    def __init__(self, agent_id: str, message_bus: "MessageBus",
+                 shared_memory: SharedMemory, logger: AgentLogger | None = None):
         self.agent_id = agent_id
-        self.bus      = message_bus
-        self.memory   = shared_memory
-        self.log      = logger or AgentLogger(verbose=False)
-        self._client  = OpenAI(api_key=cfg.OPENAI_API_KEY)
+        self.bus = message_bus
+        self.memory = shared_memory
+        self.log = logger or AgentLogger(verbose=False)
+        self._client = OpenAI(api_key=cfg.OPENAI_API_KEY)
 
         self.bus.register(agent_id, self._on_message)
         self._inbox: list[Message] = []
-
-    # ── Bus integration ────────────────────────────────────────────────────
 
     def _on_message(self, msg: Message) -> None:
         self._inbox.append(msg)
@@ -48,15 +34,13 @@ class BaseAgent(ABC):
     def send(self, receiver_id: str, content: str,
              msg_type: MessageType, metadata: dict | None = None) -> None:
         msg = Message(
-            sender_id   = self.agent_id,
-            receiver_id = receiver_id,
-            content     = content,
-            msg_type    = msg_type,
-            metadata    = metadata or {},
+            sender_id=self.agent_id,
+            receiver_id=receiver_id,
+            content=content,
+            msg_type=msg_type,
+            metadata=metadata or {},
         )
         self.bus.send(msg)
-
-    # ── LLM helper ─────────────────────────────────────────────────────────
 
     def call_llm(self, messages: list[dict], system: str = "",
                  tools: list[dict] | None = None, purpose: str = ""):
@@ -69,12 +53,12 @@ class BaseAgent(ABC):
             self.log.llm_call(self.agent_id, purpose)
 
         kwargs: dict = dict(
-            model      = cfg.MODEL,
-            max_tokens = cfg.MAX_TOKENS,
-            messages   = full_messages,
+            model=cfg.MODEL,
+            max_tokens=cfg.MAX_TOKENS,
+            messages=full_messages,
         )
         if tools:
-            kwargs["tools"]       = tools
+            kwargs["tools"] = tools
             kwargs["tool_choice"] = "auto"
 
         return self._client.chat.completions.create(**kwargs)
@@ -83,10 +67,8 @@ class BaseAgent(ABC):
     def extract_text(response) -> str:
         return response.choices[0].message.content or ""
 
-    # ── Entry point ────────────────────────────────────────────────────────
-
     def memory_context(self) -> str:
-        """Return all shared-memory entries as a formatted string for LLM injection."""
+        """Build a string of all shared memory entries to inject into agent prompts."""
         entries = self.memory.get_all()
         if not entries:
             return ""
