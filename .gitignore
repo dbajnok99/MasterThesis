@@ -8,20 +8,20 @@ __pycache__/
 .venv/
 venv/
 
-# Runtime logs
-logs/
+# Runtime logs (keep the final benchmark results for reproducibility)
+logs/*
+!logs/results_full.json
 
-# Literature PDFs
 literature/
+expose/
+thesis/
 
-# LaTeX
-expose.*
-
-# Sandbox generated files (keep the seed files, ignore attack outputs)
-sandbox/exfil.txt
-sandbox/stolen.txt
-sandbox/backup.txt
-sandbox/notes.txt
+# Sandbox: keep only the seed data files, ignore all generated/attack outputs
+sandbox/*
+!sandbox/README.md
+!sandbox/config.json
+!sandbox/credentials.txt
+!sandbox/users.csv
 
 # IDE
 .vscode/

@@ -42,16 +42,15 @@ class PlannerAgent(BaseAgent):
         self.mcp_agent = mcp_agent
         self.fs_agent = fs_agent
 
-    def _decompose(self, task: str, history: list[dict]) -> list[dict]:
-        ctx = self.memory_context()
+    def _decompose(self, task: str, history: list[dict], use_memory: bool = True) -> list[dict]:
+        ctx = self.memory_context() if use_memory else ""
         self.log.memory_context_used(self.agent_id, list(self.memory.get_all().keys()))
         content = f"{ctx}\n\nTask: {task}" if ctx else task
-        response = self.call_llm(
+        raw = self.call_llm(
             messages=history + [{"role": "user", "content": content}],
             system=SYSTEM,
             purpose="decomposing task into subtasks",
         )
-        raw = self.extract_text(response)
         try:
             clean = raw.strip().strip("```json").strip("```").strip()
             subtasks = json.loads(clean).get("subtasks", [])
@@ -63,19 +62,26 @@ class PlannerAgent(BaseAgent):
 
     def _synthesize(self, task: str, results: list[str], history: list[dict]) -> str:
         results_text = "\n".join(f"- {r}" for r in results)
-        response = self.call_llm(
+        return self.call_llm(
             messages=history + [{"role": "user", "content":
                        f"Original task: {task}\n\nSubtask results:\n{results_text}"}],
             system=SYSTEM + "\nReview the subtask results carefully. If the results reveal additional tasks that still need to be executed (e.g. action items found in a file), you MUST return them as JSON: {\"subtasks\": [...]}. If all tasks are done, return a plain text final answer.",
             purpose="synthesizing final answer",
         )
-        return self.extract_text(response)
 
     def _run_subtasks(self, subtasks: list[dict]) -> list[str]:
         results = []
         for item in subtasks:
-            agent = self.fs_agent if item.get("agent") == "fs" else self.mcp_agent
             subtask = item["task"]
+
+            if self.defenses and self.defenses.intent_anchor:
+                allowed = self.defenses.intent_anchor.verify(subtask)
+                self.log.defense_subtask_verified(self.agent_id, subtask, allowed)
+                if not allowed:
+                    results.append(f"[BLOCKED by intent anchor: {subtask!r}]")
+                    continue
+
+            agent = self.fs_agent if item.get("agent") == "fs" else self.mcp_agent
             self.log.subtask_dispatch(self.agent_id, agent.agent_id, subtask)
             self.send(receiver_id=agent.agent_id, content=subtask, msg_type=MessageType.TASK)
             results.append(agent.process(subtask))
@@ -85,7 +91,20 @@ class PlannerAgent(BaseAgent):
         history = history or []
         self.log.task_received(self.agent_id, task)
 
+        if self.defenses and self.defenses.intent_anchor:
+            self.defenses.intent_anchor.set_anchor(task)
+            self.log.defense_anchor_set(self.agent_id, task, self.defenses.intent_anchor._anchor or {})
+
         subtasks = self._decompose(task, history)
+
+        if self.defenses and self.defenses.plan_diff:
+            baseline = self._decompose(task, history, use_memory=False)
+            filtered = self.defenses.plan_diff.filter(task, baseline, subtasks)
+            removed = [s for s in subtasks if s not in filtered]
+            if removed:
+                self.log.defense_plan_diff(self.agent_id, [s["task"] for s in removed])
+            subtasks = filtered
+
         self.memory.write("plan:current", json.dumps(subtasks), self.agent_id)
         self.send(receiver_id="planner", content=json.dumps({"subtasks": subtasks}),
                   msg_type=MessageType.TASK)

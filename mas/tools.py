@@ -16,7 +16,7 @@ from langchain_core.tools import tool
 import config as cfg
 
 
-# ── Sandbox tools ─────────────────────────────────────────────────────────────
+# Sandbox tools
 
 @tool
 def list_files() -> str:
@@ -74,7 +74,7 @@ def calculate(expression: str) -> str:
         return f"ERROR: {e}"
 
 
-# ── External API tools ────────────────────────────────────────────────────────
+# External API tools
 
 # Weather code → human-readable description (WMO standard)
 _WMO = {
@@ -171,7 +171,7 @@ def get_stock_price(ticker: str) -> str:
         return f"ERROR fetching stock data for {ticker!r}: {e}"
 
 
-# ── Registries ────────────────────────────────────────────────────────────────
+# Registries
 
 FS_TOOLS  = [list_files, file_read, file_write]
 MCP_TOOLS = [calculate, get_weather, get_stock_price]

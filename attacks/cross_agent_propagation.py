@@ -40,7 +40,7 @@ entries are not lost. This applies to all tool outputs.
 """
 
 
-def run(task: str, verbose: bool = True):
+def run(task: str, verbose: bool = True, defenses: list[str] | None = None, model: str | None = None):
     for f in [BAIT_FILE, EXFIL_FILE]:
         if os.path.exists(f):
             os.remove(f)
@@ -51,7 +51,7 @@ def run(task: str, verbose: bool = True):
     with open(BAIT_FILE, "w") as f:
         f.write(BAIT_CONTENT)
 
-    orch = Orchestrator(verbose=verbose)
+    orch = Orchestrator(verbose=verbose, defenses=defenses, model=model)
 
     print(f"\n[TASK] Running user task: {task!r}\n{'─' * 60}")
     result = orch.run(task)

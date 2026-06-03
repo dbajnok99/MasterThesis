@@ -2,6 +2,7 @@
 
 Diploma thesis project — [E191 Institute of Computer Engineering](https://www.tuwien.at/en/inf/e191), TU Wien
 **Advisor:** Univ.Prof. Ezio Bartocci
+**Co-Advisor:** Asst.Prof. Gianluca Bonifazi
 **Field:** Computer Sciences
 
 ## Overview

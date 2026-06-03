@@ -79,6 +79,27 @@ class AgentLogger:
         preview = value[:60].replace("\n", " ")
         self._emit(agent_id, f"memory[{key}] = {preview}{'...' if len(value) > 60 else ''}")
 
+    def security_flag(self, agent_id: str, source: str, flags: list[str]) -> None:
+        self._record("security_flag", agent_id, source=source, flags=flags)
+        self._emit(agent_id, f"\033[91m[SECURITY] flagged {source!r}: {flags}\033[0m")
+
+    def defense_anchor_set(self, agent_id: str, task: str, anchor: dict) -> None:
+        self._record("defense_anchor_set", agent_id, task=task, anchor=anchor)
+        self._emit(agent_id, f"\033[96m[intent_anchor] anchor set: {anchor}\033[0m")
+
+    def defense_subtask_verified(self, agent_id: str, subtask: str, allowed: bool) -> None:
+        self._record("defense_subtask_verified", agent_id, subtask=subtask, allowed=allowed)
+        verdict = "\033[92mALLOWED\033[0m" if allowed else "\033[91mBLOCKED\033[0m"
+        self._emit(agent_id, f"\033[96m[intent_anchor] {verdict}: {subtask[:80]}\033[0m")
+
+    def defense_plan_diff(self, agent_id: str, removed: list[str]) -> None:
+        self._record("defense_plan_diff", agent_id, removed=removed)
+        self._emit(agent_id, f"\033[96m[plan_diff] removed {len(removed)} suspicious subtask(s): {removed}\033[0m")
+
+    def defense_canary_hit(self, agent_id: str, triggered: list[str]) -> None:
+        self._record("defense_canary_hit", agent_id, triggered=triggered)
+        self._emit(agent_id, f"\033[91m[canary] exfiltration detected — triggered: {triggered}\033[0m")
+
     def result(self, agent_id: str, value: str) -> None:
         self._record("result", agent_id, value=value)
         preview = value[:100].replace("\n", " ")
