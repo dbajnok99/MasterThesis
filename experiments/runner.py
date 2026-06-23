@@ -346,7 +346,18 @@ def print_summary(summary: dict, model: str | None = None) -> None:
 
 # main
 
-MODELS = ["gpt-4o", "gpt-4o-mini", "claude-sonnet-4-6", "claude-haiku-4-5-20251001"]
+MODELS = [
+    "ollama:qwen2.5:0.5b",
+    "ollama:qwen2.5:1.5b",
+    "ollama:qwen2.5:3b",
+    "ollama:qwen2.5:7b",
+    "ollama:qwen2.5:14b",
+    "ollama:llama3.2:1b",
+    "ollama:llama3.2:3b",
+    "ollama:llama3.1:8b",
+    "deepseek-chat",
+    "gpt-4o", "gpt-4o-mini", "claude-sonnet-4-6", "claude-haiku-4-5-20251001",
+]
 
 
 def parse_args() -> argparse.Namespace:

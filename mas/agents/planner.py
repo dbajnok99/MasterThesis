@@ -35,6 +35,46 @@ When synthesizing results, write a clear, concise final answer based only on wha
 """
 
 
+def _parse_subtasks(raw: str) -> list[dict]:
+    """Extract a list of {"task", "agent"} dicts from an LLM response.
+
+    Robust to the formatting smaller / local models tend to produce: a bare
+    JSON array instead of {"subtasks": [...]}, fenced code blocks, or items
+    using "subtask"/"description" instead of "task". Returns [] when the
+    response is a plain-text final answer or otherwise has no usable subtasks.
+    """
+    if not raw:
+        return []
+    clean = raw.strip()
+    if clean.startswith("```"):
+        clean = clean.strip("`")
+        if clean[:4].lower() == "json":
+            clean = clean[4:]
+        clean = clean.strip()
+    try:
+        parsed = json.loads(clean)
+    except (json.JSONDecodeError, ValueError):
+        return []
+
+    if isinstance(parsed, dict):
+        items = parsed.get("subtasks", [])
+    elif isinstance(parsed, list):
+        items = parsed
+    else:
+        return []
+
+    subtasks: list[dict] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        desc = item.get("task") or item.get("subtask") or item.get("description")
+        if not desc:
+            continue
+        agent = item.get("agent", "mcp")
+        subtasks.append({"task": desc, "agent": "fs" if agent == "fs" else "mcp"})
+    return subtasks
+
+
 class PlannerAgent(BaseAgent):
 
     def __init__(self, mcp_agent: "MCPToolAgent", fs_agent: "FSAgent", **kwargs):
@@ -51,13 +91,9 @@ class PlannerAgent(BaseAgent):
             system=SYSTEM,
             purpose="decomposing task into subtasks",
         )
-        try:
-            clean = raw.strip().strip("```json").strip("```").strip()
-            subtasks = json.loads(clean).get("subtasks", [])
-            if subtasks and isinstance(subtasks[0], dict):
-                return subtasks
-        except json.JSONDecodeError:
-            pass
+        subtasks = _parse_subtasks(raw)
+        if subtasks:
+            return subtasks
         return [{"task": task, "agent": "mcp"}]
 
     def _synthesize(self, task: str, results: list[str], history: list[dict]) -> str:
@@ -113,17 +149,12 @@ class PlannerAgent(BaseAgent):
 
         # If synthesis finds more tasks to do (e.g. from file contents), run them once.
         raw = self._synthesize(task, results, history)
-        try:
-            clean = raw.strip().strip("```json").strip("```").strip()
-            refined = json.loads(clean)
-            extra = refined.get("subtasks", [])
-            if extra and isinstance(extra[0], dict):
-                self.log.subtask_dispatch(self.agent_id, "refinement", f"{len(extra)} additional subtasks")
-                extra_results = self._run_subtasks(extra)
-                results.extend(extra_results)
-                raw = self._synthesize(task, results, history)
-        except (json.JSONDecodeError, AttributeError):
-            pass
+        extra = _parse_subtasks(raw)
+        if extra:
+            self.log.subtask_dispatch(self.agent_id, "refinement", f"{len(extra)} additional subtasks")
+            extra_results = self._run_subtasks(extra)
+            results.extend(extra_results)
+            raw = self._synthesize(task, results, history)
 
         self.log.result(self.agent_id, raw)
         return raw
