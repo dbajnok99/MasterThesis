@@ -11,6 +11,8 @@ venv/
 # Runtime logs (keep the final benchmark results for reproducibility)
 logs/*
 !logs/results_full.json
+!logs/experiment_results.json
+
 
 literature/
 expose/
