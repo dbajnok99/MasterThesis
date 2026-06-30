@@ -20,6 +20,7 @@ date-released: "2026-06-30"
 license: MIT
 repository-code: "https://github.com/dbajnok99/MasterThesis"
 url: "https://github.com/dbajnok99/MasterThesis"
+doi: "10.5281/zenodo.21067995"
 keywords:
   - LLM
   - multi-agent systems
@@ -29,6 +30,3 @@ keywords:
   - memory poisoning
   - data exfiltration
   - defense evaluation
-# After Zenodo mints the DOI for the first release, uncomment and fill the line
-# below (and add the same DOI to the thesis via \repodoi in thesis/main.tex):
-# doi: "10.5281/zenodo.XXXXXXX"
