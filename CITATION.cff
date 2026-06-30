@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "Securing Agentic Architectures: A Deliberately Vulnerable Multi-Agent LLM Testbed"
+abstract: >-
+  Experimental prototype accompanying the master's thesis "Securing Agentic
+  Architectures" (TU Wien). A deliberately vulnerable three-agent LLM system
+  with seven attack scenarios (memory poisoning, indirect injection, cross-agent
+  propagation, planner hijacking, system prompt extraction, memory membership
+  probing, and tool result poisoning) and four defences (canary tokens, intent
+  anchoring, counterfactual plan diffing, and output spotlighting), evaluated
+  across twelve models (four paid API models and eight free local open-weight
+  models).
+type: software
+authors:
+  - family-names: Bajnok
+    given-names: "Dénes Ágoston"
+    affiliation: "TU Wien"
+version: 1.0.0
+date-released: "2026-06-30"
+license: MIT
+repository-code: "https://github.com/dbajnok99/MasterThesis"
+url: "https://github.com/dbajnok99/MasterThesis"
+keywords:
+  - LLM
+  - multi-agent systems
+  - agent security
+  - prompt injection
+  - indirect prompt injection
+  - memory poisoning
+  - data exfiltration
+  - defense evaluation
+# After Zenodo mints the DOI for the first release, uncomment and fill the line
+# below (and add the same DOI to the thesis via \repodoi in thesis/main.tex):
+# doi: "10.5281/zenodo.XXXXXXX"

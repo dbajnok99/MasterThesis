@@ -1,0 +1,35 @@
+MIT License
+
+Copyright (c) 2026 Dénes Ágoston Bajnok
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+This license covers the original source code in this repository (the agent
+prototype under mas/, the attack scenarios under attacks/, the defences under
+mas/defenses/, the experiment runner and analysis under experiments/, and the
+benchmark result files under logs/). It is intended for security research and
+authorized testing only.
+
+Third-party components are NOT covered by this license and remain under their
+own terms. In particular, the thesis document, the TU Wien thesis class
+(vutinfth.cls), institutional logos, and the academic papers under literature/
+are excluded from this repository (they are not tracked in version control) and
+are subject to the copyright of their respective owners.

@@ -1,0 +1,23 @@
+{
+  "title": "Securing Agentic Architectures: A Deliberately Vulnerable Multi-Agent LLM Testbed",
+  "description": "Experimental prototype accompanying the master's thesis \"Securing Agentic Architectures\" (TU Wien). A deliberately vulnerable three-agent LLM system with seven attack scenarios (memory poisoning, indirect injection, cross-agent propagation, planner hijacking, system prompt extraction, memory membership probing, and tool result poisoning) and four defences (canary tokens, intent anchoring, counterfactual plan diffing, and output spotlighting), evaluated across twelve models: four paid API models (GPT-4o, GPT-4o-mini, Claude Sonnet 4.6, Claude Haiku 4.5) and eight free local open-weight models (Qwen2.5 in five sizes, Llama 3.2 1B/3B, Llama 3.1 8B). Includes the full experiment runner and the benchmark result files used to produce the thesis tables.",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "MIT",
+  "creators": [
+    {
+      "name": "Bajnok, Dénes Ágoston",
+      "affiliation": "TU Wien"
+    }
+  ],
+  "keywords": [
+    "LLM",
+    "multi-agent systems",
+    "agent security",
+    "prompt injection",
+    "indirect prompt injection",
+    "memory poisoning",
+    "data exfiltration",
+    "defense evaluation"
+  ]
+}
