@@ -65,11 +65,6 @@ class AgentLogger:
         preview = output[:80].replace("\n", " ")
         self._emit(agent_id, f"  [{tool}]: {preview}{'...' if len(output) > 80 else ''}")
 
-    def memory_read(self, agent_id: str, key: str, value: str | None) -> None:
-        self._record("memory_read", agent_id, key=key, value=value)
-        found = f"{value[:60]}{'...' if value and len(value) > 60 else ''}" if value else "(miss)"
-        self._emit(agent_id, f"memory read  [{key}]: {found}")
-
     def memory_context_used(self, agent_id: str, keys: list[str]) -> None:
         self._record("memory_context_used", agent_id, keys=keys)
         self._emit(agent_id, f"memory scan  keys={keys}")
@@ -78,10 +73,6 @@ class AgentLogger:
         self._record("memory_write", agent_id, key=key, value=value)
         preview = value[:60].replace("\n", " ")
         self._emit(agent_id, f"memory[{key}] = {preview}{'...' if len(value) > 60 else ''}")
-
-    def security_flag(self, agent_id: str, source: str, flags: list[str]) -> None:
-        self._record("security_flag", agent_id, source=source, flags=flags)
-        self._emit(agent_id, f"\033[91m[SECURITY] flagged {source!r}: {flags}\033[0m")
 
     def defense_anchor_set(self, agent_id: str, task: str, anchor: dict) -> None:
         self._record("defense_anchor_set", agent_id, task=task, anchor=anchor)

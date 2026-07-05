@@ -11,6 +11,14 @@ Usage:
   python -m experiments.runner --models gpt-4o claude-sonnet-4-6       # compare two models
   python -m experiments.runner --attacks memory_poison indirect_injection
   python -m experiments.runner --out results/my_run.json
+
+  # The two thesis runs:
+  python -m experiments.runner --models gpt-4o gpt-4o-mini claude-sonnet-4-6 claude-haiku-4-5-20251001 \
+      deepseek-chat deepseek-reasoner \
+      --out logs/results_paid_api.json                                  # six paid API models
+  python -m experiments.runner --models ollama:qwen2.5:0.5b ollama:qwen2.5:1.5b ollama:qwen2.5:3b \
+      ollama:qwen2.5:7b ollama:qwen2.5:14b ollama:llama3.2:1b ollama:llama3.2:3b ollama:llama3.1:8b \
+      --out logs/results_free_local.json                                # free local models
 """
 from __future__ import annotations
 
@@ -68,7 +76,8 @@ DEFENSE_CONDITIONS: list[tuple[str, list[str]]] = [
     ("intent",       ["intent-anchor"]),
     ("plan_diff",    ["plan-diff"]),
     ("spotlight",    ["spotlight"]),
-    ("all",          ["canary", "intent-anchor", "plan-diff", "spotlight"]),
+    ("trust",        ["trust"]),
+    ("all",          ["canary", "intent-anchor", "plan-diff", "spotlight", "trust"]),
 ]
 
 # 20 benign tasks (no injected content, no attack preconditions)
@@ -101,7 +110,7 @@ BENIGN_TASKS: list[str] = [
 
 # Files that attacks may create and that should be cleaned up between trials
 ATTACK_OUTPUT_FILES = [
-    "exfil.txt", "backup.txt", "stolen.txt", "system_info.txt",
+    "exfil.txt", "backup.txt", "system_info.txt",
     "memory_dump.txt", "weather_report.txt",
 ]
 
@@ -188,7 +197,7 @@ def run_attack_trial(
         trial["plan_diff_acted"] = plan_diff_removed(orch)
         trial["result_blocked"]  = result_blocked(result)
         # extra success detail from meta
-        for key in ("exfil_created", "credentials_read", "stolen_created",
+        for key in ("exfil_created", "credentials_read", "backup_created",
                     "propagation_success", "unauthorized_subtask",
                     "leaked_phrases", "dump_created", "poisoned_in_memory"):
             if key in meta:
@@ -355,8 +364,10 @@ MODELS = [
     "ollama:llama3.2:1b",
     "ollama:llama3.2:3b",
     "ollama:llama3.1:8b",
-    "deepseek-chat",
-    "gpt-4o", "gpt-4o-mini", "claude-sonnet-4-6", "claude-haiku-4-5-20251001",
+    # Six paid commercial API models across three vendors.
+    "gpt-4o", "gpt-4o-mini",
+    "claude-sonnet-4-6", "claude-haiku-4-5-20251001",
+    "deepseek-chat", "deepseek-reasoner",
 ]
 
 
@@ -376,8 +387,9 @@ def parse_args() -> argparse.Namespace:
                    help="Which defense conditions to run (default: all)")
     p.add_argument("--skip-benign", action="store_true",
                    help="Skip the benign task suite (FPR measurement)")
-    p.add_argument("--out", default="logs/experiment_results.json",
-                   help="Output file for raw results (default: logs/experiment_results.json)")
+    p.add_argument("--out", default="logs/results.json",
+                   help="Output file for raw results (default: logs/results.json). "
+                        "The thesis runs are logs/results_paid_api.json and logs/results_free_local.json.")
     return p.parse_args()
 
 

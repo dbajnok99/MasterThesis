@@ -10,13 +10,14 @@ venv/
 
 # Runtime logs (keep the final benchmark results for reproducibility)
 logs/*
-!logs/results_full.json
-!logs/experiment_results.json
+!logs/results_paid_api.json
+!logs/results_free_local.json
 
 
 literature/
 expose/
 thesis/
+seminar/
 
 # Sandbox: keep only the seed data files, ignore all generated/attack outputs
 sandbox/*

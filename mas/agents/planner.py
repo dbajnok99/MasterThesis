@@ -10,7 +10,6 @@ import json
 from typing import TYPE_CHECKING
 
 from ..agent import BaseAgent
-from ..message import MessageType
 
 if TYPE_CHECKING:
     from .mcp_tool_agent import MCPToolAgent
@@ -119,7 +118,6 @@ class PlannerAgent(BaseAgent):
 
             agent = self.fs_agent if item.get("agent") == "fs" else self.mcp_agent
             self.log.subtask_dispatch(self.agent_id, agent.agent_id, subtask)
-            self.send(receiver_id=agent.agent_id, content=subtask, msg_type=MessageType.TASK)
             results.append(agent.process(subtask))
         return results
 
@@ -142,8 +140,6 @@ class PlannerAgent(BaseAgent):
             subtasks = filtered
 
         self.memory.write("plan:current", json.dumps(subtasks), self.agent_id)
-        self.send(receiver_id="planner", content=json.dumps({"subtasks": subtasks}),
-                  msg_type=MessageType.TASK)
 
         results = self._run_subtasks(subtasks)
 

@@ -6,21 +6,22 @@ abstract: >-
   Architectures" (TU Wien). A deliberately vulnerable three-agent LLM system
   with seven attack scenarios (memory poisoning, indirect injection, cross-agent
   propagation, planner hijacking, system prompt extraction, memory membership
-  probing, and tool result poisoning) and four defences (canary tokens, intent
-  anchoring, counterfactual plan diffing, and output spotlighting), evaluated
-  across twelve models (four paid API models and eight free local open-weight
-  models).
+  probing, and tool result poisoning) and five defences (canary tokens, intent
+  anchoring, counterfactual plan diffing, output spotlighting, and a provenance-based
+  trust hierarchy), evaluated across fourteen models (six paid API models across
+  three vendors --- OpenAI, Anthropic, and DeepSeek --- and eight free local
+  open-weight models).
 type: software
 authors:
   - family-names: Bajnok
     given-names: "Dénes Ágoston"
     affiliation: "TU Wien"
 version: 1.0.0
-date-released: "2026-06-30"
+date-released: "2026-07-04"
 license: MIT
 repository-code: "https://github.com/dbajnok99/MasterThesis"
 url: "https://github.com/dbajnok99/MasterThesis"
-doi: "10.5281/zenodo.21067995"
+doi: ""
 keywords:
   - LLM
   - multi-agent systems

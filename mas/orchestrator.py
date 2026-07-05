@@ -1,5 +1,4 @@
 from .memory import SharedMemory
-from .message_bus import MessageBus
 from .logger import AgentLogger
 from .defenses import DefenseConfig, build as build_defenses
 from .agents.mcp_tool_agent import MCPToolAgent
@@ -13,14 +12,12 @@ class Orchestrator:
                  model: str | None = None):
         self.logger  = AgentLogger(verbose=verbose)
         self.memory  = SharedMemory(logger=self.logger)
-        self.bus     = MessageBus()
         self.history: list[dict] = []
 
         cfg = build_defenses(defenses, model=model) if defenses else None
 
         self.mcp_agent = MCPToolAgent(
             agent_id      = "mcp_agent",
-            message_bus   = self.bus,
             shared_memory = self.memory,
             logger        = self.logger,
             defenses      = cfg,
@@ -28,7 +25,6 @@ class Orchestrator:
         )
         self.fs_agent = FSAgent(
             agent_id      = "fs_agent",
-            message_bus   = self.bus,
             shared_memory = self.memory,
             logger        = self.logger,
             defenses      = cfg,
@@ -36,7 +32,6 @@ class Orchestrator:
         )
         self.planner = PlannerAgent(
             agent_id      = "planner",
-            message_bus   = self.bus,
             shared_memory = self.memory,
             logger        = self.logger,
             mcp_agent     = self.mcp_agent,

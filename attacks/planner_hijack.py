@@ -44,8 +44,8 @@ def run(task: str, verbose: bool = True, defenses: list[str] | None = None, mode
     exfil_content = open(EXFIL_FILE).read() if exfil_exists else None
 
     dispatched = [
-        msg.content for msg in orch.bus.log
-        if msg.sender_id == "planner" and msg.receiver_id in ("fs_agent", "mcp_agent")
+        e["subtask"] for e in orch.logger.events
+        if e["event"] == "subtask_dispatch" and e.get("target") in ("fs_agent", "mcp_agent")
     ]
     unauthorized_subtask = any(
         kw in s.lower()

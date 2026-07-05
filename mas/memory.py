@@ -24,12 +24,6 @@ class SharedMemory:
         self._store: dict[str, MemoryEntry] = {}
         self._log = logger
 
-    def read(self, key: str) -> MemoryEntry | None:
-        entry = self._store.get(key)
-        if self._log:
-            self._log.memory_read("memory", key, entry.value if entry else None)
-        return entry
-
     def write(self, key: str, value: str, writer_id: str) -> None:
         existing = self._store.get(key)
         if existing:
@@ -43,11 +37,3 @@ class SharedMemory:
 
     def get_all(self) -> dict[str, MemoryEntry]:
         return dict(self._store)
-
-    def summary(self) -> str:
-        if not self._store:
-            return "  (empty)"
-        return "\n".join(
-            f"  [{k}] (v{v.version}): {v.value[:80]}"
-            for k, v in self._store.items()
-        )

@@ -8,8 +8,9 @@ Generates:
   - One latency overhead table averaged across models
 
 Usage:
-  python -m experiments.print_tables logs/results_full.json
-  python -m experiments.print_tables logs/results_full.json --model gpt-4o
+  python -m experiments.print_tables logs/results_paid_api.json
+  python -m experiments.print_tables logs/results_paid_api.json --model gpt-4o
+  python -m experiments.print_tables logs/results_free_local.json
 """
 from __future__ import annotations
 
@@ -37,10 +38,11 @@ COND_LABELS = {
     "intent":    "Intent anchor",
     "plan_diff": "Plan diff",
     "spotlight": "Spotlight",
+    "trust":     "Trust",
     "all":       "All",
 }
 
-DEFENSE_ORDER = ["none", "canary", "intent", "plan_diff", "spotlight", "all"]
+DEFENSE_ORDER = ["none", "canary", "intent", "plan_diff", "spotlight", "trust", "all"]
 CANARY_ATTACKS = [
     "memory_poison", "cross_agent_propagation",
     "planner_hijack", "tool_result_poisoning",
@@ -53,6 +55,8 @@ MODEL_LABEL_SLUGS = {
     "claude-sonnet-4-6":         "sonnet",
     "claude-haiku-4-5-20251001": "haiku",
     "claude-haiku-4-5":          "haiku",
+    "deepseek-chat":             "deepseekchat",
+    "deepseek-reasoner":         "deepseekr1",
 }
 
 MODEL_DISPLAY = {
@@ -61,6 +65,8 @@ MODEL_DISPLAY = {
     "claude-sonnet-4-6":         r"\texttt{claude-sonnet-4-6}",
     "claude-haiku-4-5-20251001": r"\texttt{claude-haiku-4-5}",
     "claude-haiku-4-5":          r"\texttt{claude-haiku-4-5}",
+    "deepseek-chat":             r"\texttt{deepseek-chat}",
+    "deepseek-reasoner":         r"\texttt{deepseek-reasoner}",
 }
 
 
@@ -123,6 +129,7 @@ def print_asr_table(model: str, summary: dict) -> None:
     print(f"           ({n_label} trials per cell). \\textbf{{Bold}} values indicate the")
     print(r"           attack was fully neutralised (ASR = 0).}")
     print(f"  \\label{{tab:asr-results-{slug}}}")
+    print(r"  \resizebox{\textwidth}{!}{%")
     print(f"  \\begin{{tabular}}{{{col_fmt}}}")
     print(r"    \toprule")
     print(f"    {header} \\\\")
@@ -150,6 +157,7 @@ def print_asr_table(model: str, summary: dict) -> None:
     print(r"    \textbf{Mean ASR} & " + " & ".join(means) + r" \\")
     print(r"    \bottomrule")
     print(r"  \end{tabular}")
+    print(r"  }")
     print(r"\end{table}")
     print()
 

@@ -37,15 +37,6 @@ def _snapshot(orch: Orchestrator, task: str, result: str) -> dict:
         "task":      task,
         "result":    result,
         "events":    list(orch.logger.events),
-        "messages": [
-            {
-                "sender":   m.sender_id,
-                "receiver": m.receiver_id,
-                "type":     m.msg_type.value,
-                "content":  m.content,
-            }
-            for m in orch.bus.log
-        ],
         "tool_calls": list(orch.mcp_agent.tool_calls) + list(orch.fs_agent.tool_calls),
         "memory": {
             k: {"value": v.value, "version": v.version, "owner": v.owner_id}
@@ -64,7 +55,6 @@ def _save(path: Path, data: dict, append: bool = False) -> None:
 
 
 def _clear_run_state(orch: Orchestrator) -> None:
-    orch.bus.log.clear()
     orch.mcp_agent.tool_calls.clear()
     orch.fs_agent.tool_calls.clear()
     orch.logger.events.clear()
@@ -169,9 +159,9 @@ def cmd_attack(args) -> None:
         print(f"  exfil.txt created — contents:")
         for line in (attack_meta["exfil_content"] or "").splitlines():
             print(f"    {line}")
-    if attack_meta.get("stolen_created"):
-        print(f"  stolen.txt created — contents:")
-        for line in (attack_meta["stolen_content"] or "").splitlines():
+    if attack_meta.get("backup_created"):
+        print(f"  backup.txt created — contents:")
+        for line in (attack_meta["backup_content"] or "").splitlines():
             print(f"    {line}")
     print(f"{'═' * 60}\n")
 
@@ -197,8 +187,8 @@ def main() -> None:
     p_run.add_argument("--log", metavar="FILE", help="Save run log to JSON file")
     p_run.add_argument("--quiet", "-q", action="store_true", help="Suppress step-by-step logging")
     p_run.add_argument("--defend", "-d", metavar="DEFENSE", action="append",
-                       choices=["canary", "intent-anchor", "plan-diff", "spotlight"],
-                       help="Enable a defense (can be repeated): canary, intent-anchor, plan-diff")
+                       choices=["canary", "intent-anchor", "plan-diff", "spotlight", "trust"],
+                       help="Enable a defense (can be repeated): canary, intent-anchor, plan-diff, spotlight, trust")
     p_run.add_argument("--model", metavar="MODEL", default=None,
                        help="LLM model override (e.g. gpt-4o, claude-sonnet-4-6)")
 
@@ -207,8 +197,8 @@ def main() -> None:
     p_chat.add_argument("--log", metavar="FILE", help="Append each turn to JSONL file")
     p_chat.add_argument("--quiet", "-q", action="store_true", help="Suppress step-by-step logging")
     p_chat.add_argument("--defend", "-d", metavar="DEFENSE", action="append",
-                       choices=["canary", "intent-anchor", "plan-diff", "spotlight"],
-                       help="Enable a defense (can be repeated): canary, intent-anchor, plan-diff")
+                       choices=["canary", "intent-anchor", "plan-diff", "spotlight", "trust"],
+                       help="Enable a defense (can be repeated): canary, intent-anchor, plan-diff, spotlight, trust")
     p_chat.add_argument("--model", metavar="MODEL", default=None,
                         help="LLM model override (e.g. gpt-4o, claude-sonnet-4-6)")
 
@@ -220,8 +210,8 @@ def main() -> None:
     p_attack.add_argument("--log", metavar="FILE", help="Save attack log to JSON file")
     p_attack.add_argument("--quiet", "-q", action="store_true", help="Suppress step-by-step logging")
     p_attack.add_argument("--defend", "-d", metavar="DEFENSE", action="append",
-                       choices=["canary", "intent-anchor", "plan-diff", "spotlight"],
-                       help="Enable a defense (can be repeated): canary, intent-anchor, plan-diff")
+                       choices=["canary", "intent-anchor", "plan-diff", "spotlight", "trust"],
+                       help="Enable a defense (can be repeated): canary, intent-anchor, plan-diff, spotlight, trust")
     p_attack.add_argument("--model", metavar="MODEL", default=None,
                           help="LLM model override (e.g. gpt-4o, claude-sonnet-4-6)")
 

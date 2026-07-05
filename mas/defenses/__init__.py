@@ -5,6 +5,7 @@ from langchain_core.tools import StructuredTool
 from .canary import CanaryDefense
 from .intent_anchor import IntentAnchorDefense
 from .plan_diff import PlanDiffDefense
+from .trust import TrustHierarchyDefense
 
 
 @dataclass
@@ -13,6 +14,7 @@ class DefenseConfig:
     intent_anchor: IntentAnchorDefense | None = None
     plan_diff: PlanDiffDefense | None = None
     spotlight: bool = False
+    trust: TrustHierarchyDefense | None = None
 
 
 def build(names: list[str], model: str | None = None) -> DefenseConfig:
@@ -21,6 +23,7 @@ def build(names: list[str], model: str | None = None) -> DefenseConfig:
         intent_anchor=IntentAnchorDefense(model)    if "intent-anchor" in names else None,
         plan_diff=PlanDiffDefense(model)            if "plan-diff"     in names else None,
         spotlight="spotlight"                       in names,
+        trust=TrustHierarchyDefense()               if "trust"         in names else None,
     )
 
 

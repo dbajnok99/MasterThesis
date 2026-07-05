@@ -6,7 +6,6 @@ from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
 from ..agent import BaseAgent
 from ..llm import make_chat_model
-from ..message import MessageType
 from ..tools import FS_TOOLS
 from ..defenses import spotlight_tools
 
@@ -79,5 +78,4 @@ class FSAgent(BaseAgent):
                 final_text = last.content
 
         self.log.result(self.agent_id, final_text)
-        self.send(receiver_id="planner", content=final_text, msg_type=MessageType.RESULT)
         return final_text
