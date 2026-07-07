@@ -226,7 +226,21 @@ If you use this testbed, please cite the archived release (see `CITATION.cff`):
 
 ## References
 
-- Greshake et al. — [From prompt injections to protocol exploits: Threats in LLM-powered AI agents workflows](https://www.sciencedirect.com/science/article/pii/S2405959525001997)
-- Chen et al. 2024 — AgentPoison: Red-teaming LLM Agents via Poisoning Memory or Knowledge Bases
-- Lee & Tiwari 2024 — Prompt Infection: LLM-to-LLM Prompt Injection within Multi-Agent Systems
-- [AI Agents Under Threat: A Survey of Key Security Challenges and Future Pathways](https://dl.acm.org/doi/10.1145/3716628)
+The attacks and defences build on the following work.
+
+**Attacks / threats**
+- Greshake et al. 2023 — [Not What You've Signed Up For: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection](https://arxiv.org/abs/2302.12173) (AISec) — indirect injection, tool-result poisoning, threat model
+- Perez & Ribeiro 2022 — [Ignore Previous Prompt: Attack Techniques For Language Models](https://arxiv.org/abs/2211.09527) (NeurIPS ML Safety Workshop) — prompt injection, planner hijacking
+- Chen et al. 2024 — [AgentPoison: Red-teaming LLM Agents via Poisoning Memory or Knowledge Bases](https://arxiv.org/abs/2407.12784) (NeurIPS) — memory poisoning
+- Lee & Tiwari 2024 — [Prompt Infection: LLM-to-LLM Prompt Injection within Multi-Agent Systems](https://arxiv.org/abs/2410.07283) — cross-agent propagation
+- Carlini et al. 2021 — Extracting Training Data from Large Language Models (USENIX Security) — system-prompt extraction, memory membership probing
+- Li et al. 2026 — [Les Dissonances: Cross-Tool Harvesting and Polluting in Pool-of-Tools Empowered LLM Agents](https://arxiv.org/abs/2504.03111) (NDSS) — tool-result poisoning
+
+**Defences**
+- Hines et al. 2024 — [Defending Against Indirect Prompt Injection Attacks With Spotlighting](https://arxiv.org/abs/2403.14720) — output spotlighting
+- Ji et al. 2026 (SEAgent) — [Taming Various Privilege Escalation in LLM-Based Agent Systems: A Mandatory Access Control Framework](https://arxiv.org/abs/2601.11893) — provenance-based trust hierarchy
+
+**Benchmarks & surveys**
+- Zhang et al. 2025 — [Agent Security Bench (ASB): Formalizing and Benchmarking Attacks and Defenses in LLM-based Agents](https://arxiv.org/abs/2410.02644) (ICLR) — threat model, evaluation metrics
+- Ferrag et al. 2025 — [From Prompt Injections to Protocol Exploits: Threats in LLM-Powered AI Agents Workflows](https://www.sciencedirect.com/science/article/pii/S2405959525001997) (ICT Express)
+- Deng et al. 2025 — [AI Agents Under Threat: A Survey of Key Security Challenges and Future Pathways](https://dl.acm.org/doi/10.1145/3716628) (ACM Computing Surveys)
