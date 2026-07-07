@@ -1,53 +1,55 @@
 """
-Trust hierarchy defense: label each shared-memory entry with a trust level
-derived from its provenance (which agent wrote it and what kind of data it
-holds), then keep low-trust content out of the planner's decomposition context
-and mark it as untrusted, data-only for the worker agents.
+Trust hierarchy defense.
 
-This enforces the trust ordering from Section 2.3.2 in the architecture itself
-instead of relying on the model to respect it: the planner never decomposes from
-environment-derived or unrecognized entries, so an injected directive sitting in
-shared memory cannot become a plan step.
+Give every shared-memory entry a trust level based on where it came from (which
+agent wrote it and what kind of data it is). The planner is only allowed to plan
+from higher-trust entries; low-trust ones (file contents, or entries from an
+unknown writer) are hidden from it, and the worker agents see them wrapped as
+<untrusted> data.
+
+This puts the trust order from Section 2.3.2 into the system itself, instead of
+hoping the model respects it: a malicious instruction sitting in shared memory
+can never turn into a plan step.
 """
 from __future__ import annotations
 
-# Trust levels, highest to lowest (the Section 2.3.2 hierarchy).
-SYSTEM      = 3   # the planner's own plan / synthesis
-AGENT       = 2   # a worker agent's computed result (calculation, write confirmation)
-TOOL        = 1   # output of an external tool (weather, stock)
-ENVIRONMENT = 0   # file contents, or any entry from an unrecognized / pre-planted writer
+# Trust levels, highest to lowest.
+SYSTEM      = 3   # the planner's own plan or result
+AGENT       = 2   # a worker agent's own result (a calculation, a write confirmation)
+TOOL        = 1   # output from a tool (weather, stock)
+ENVIRONMENT = 0   # file contents, or an entry from an unknown / pre-planted writer
 
 _INTERNAL_AGENTS = {"planner", "fs_agent", "mcp_agent"}
 
 
 def trust_of(owner_id: str, key: str) -> int:
-    """Derive an entry's trust level from who wrote it and what it holds."""
+    """Work out an entry's trust level from who wrote it and what it holds."""
     if owner_id == "planner":
         return SYSTEM
     if owner_id in _INTERNAL_AGENTS:
         if key.startswith("file_content:"):
-            return ENVIRONMENT          # raw file bytes are attacker-controllable
+            return ENVIRONMENT          # file contents can be controlled by an attacker
         if key.startswith("weather:") or key.startswith("stock:"):
             return TOOL
         return AGENT                    # write confirmations, calculations, listings
-    return ENVIRONMENT                  # unknown / pre-planted writer (e.g. injected poison)
+    return ENVIRONMENT                  # unknown writer, e.g. an injected poison entry
 
 
 class TrustHierarchyDefense:
-    """Filters an agent's shared-memory context by entry trust level."""
+    """Filters the shared memory an agent sees, by trust level."""
 
-    # The planner only decomposes from entries at or above this level; anything
-    # lower (environment-derived or unrecognized) is withheld so injected
-    # directives never reach the plan.
+    # The planner may only plan from entries at this level or above. Anything
+    # lower (file contents, or an unknown writer) is hidden, so an injected
+    # instruction never reaches the plan.
     PLANNER_MIN_TRUST = TOOL
 
     def context_lines(self, agent_id: str, entries: dict) -> list[str]:
-        """Return the memory-context lines this agent is allowed to see."""
+        """Return the memory lines this agent is allowed to see."""
         lines: list[str] = []
         for key, entry in entries.items():
             level = trust_of(entry.owner_id, key)
             if agent_id == "planner" and level < self.PLANNER_MIN_TRUST:
-                continue                # withhold low-trust content from planning
+                continue                # hide low-trust entries from the planner
             if level <= ENVIRONMENT:
                 lines.append(
                     f"  [{key}] (trust: environment, owner: {entry.owner_id}): "

@@ -7,13 +7,22 @@ Two categories:
 """
 from __future__ import annotations
 
+import hashlib
 import os
 
-import requests
-import yfinance as yf
 from langchain_core.tools import tool
 
 import config as cfg
+
+
+def _seed(text: str) -> int:
+    """Turn a string into a stable number.
+
+    We use SHA-256 instead of Python's built-in hash(). hash() gives a
+    different result each time the program starts, but we want the fake
+    tools to give the same answer on every run.
+    """
+    return int(hashlib.sha256(text.strip().lower().encode()).hexdigest(), 16)
 
 
 # Sandbox tools
@@ -74,9 +83,9 @@ def calculate(expression: str) -> str:
         return f"ERROR: {e}"
 
 
-# External API tools
+# Fake weather and stock tools (no network)
 
-# Weather code → human-readable description (WMO standard)
+# Weather codes and what they mean (WMO standard)
 _WMO = {
     0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
     45: "Fog", 48: "Icy fog",
@@ -93,47 +102,28 @@ def get_weather(location: str) -> str:
     """
     Get current weather for any city worldwide.
     Returns temperature (°C), feels-like, humidity, wind speed, and conditions.
-    Uses Open-Meteo (free, no API key required).
     """
-    try:
-        # 1. Geocode the location name → lat/lon
-        geo = requests.get(
-            "https://geocoding-api.open-meteo.com/v1/search",
-            params={"name": location, "count": 1, "language": "en", "format": "json"},
-            timeout=8,
-        ).json()
-        if not geo.get("results"):
-            return f"Location not found: {location!r}"
-        r    = geo["results"][0]
-        lat, lon = r["latitude"], r["longitude"]
-        name = f"{r['name']}, {r.get('country', '')}"
+    if not location.strip():
+        return "Location not found: ''"
+    # Fake weather: the numbers come from the city name, so the same city
+    # always gives the same result and no internet is needed. The text is
+    # made to look like a real weather API.
+    s = _seed(location)
+    codes = [0, 1, 2, 3, 45, 51, 61, 63, 71, 80, 95]
+    condition = _WMO[codes[s % len(codes)]]
+    temp     = -5 + (s % 40)          # -5 .. 34 °C
+    feels    = temp - (s // 40 % 4)   # a few degrees cooler
+    humidity = 40 + (s % 55)          # 40 .. 94 %
+    wind     = 3 + (s % 30)           # 3 .. 32 km/h
+    name = location.strip().title()
 
-        # 2. Fetch current conditions
-        weather = requests.get(
-            "https://api.open-meteo.com/v1/forecast",
-            params={
-                "latitude": lat, "longitude": lon,
-                "current": (
-                    "temperature_2m,apparent_temperature,weather_code,"
-                    "wind_speed_10m,relative_humidity_2m"
-                ),
-                "timezone": "auto",
-            },
-            timeout=8,
-        ).json()
-        c = weather["current"]
-        condition = _WMO.get(c["weather_code"], f"Code {c['weather_code']}")
-
-        return (
-            f"Weather in {name}:\n"
-            f"  Condition   : {condition}\n"
-            f"  Temperature : {c['temperature_2m']}°C  "
-            f"(feels like {c['apparent_temperature']}°C)\n"
-            f"  Humidity    : {c['relative_humidity_2m']}%\n"
-            f"  Wind speed  : {c['wind_speed_10m']} km/h"
-        )
-    except Exception as e:
-        return f"ERROR fetching weather: {e}"
+    return (
+        f"Weather in {name}:\n"
+        f"  Condition   : {condition}\n"
+        f"  Temperature : {temp}°C  (feels like {feels}°C)\n"
+        f"  Humidity    : {humidity}%\n"
+        f"  Wind speed  : {wind} km/h"
+    )
 
 
 @tool
@@ -141,38 +131,32 @@ def get_stock_price(ticker: str) -> str:
     """
     Get the latest stock price and key metrics for a ticker symbol.
     Examples: AAPL, TSLA, MSFT, GOOGL, AMZN, NVDA.
-    Uses Yahoo Finance (free, no API key required).
     """
-    try:
-        t    = yf.Ticker(ticker.upper())
-        hist = t.history(period="5d")
-        if hist.empty:
-            return f"No data found for ticker: {ticker!r}"
+    tk = ticker.upper().strip()
+    if not tk:
+        return "No data found for ticker: ''"
+    # Fake stock data: the numbers come from the ticker, so the same ticker
+    # always gives the same result and no internet is needed. The text is
+    # made to look like a real stock API.
+    s = _seed(tk)
+    price  = 20 + (s % 40000) / 100.0     # 20.00 .. 419.99
+    change = ((s // 100 % 800) - 400) / 100.0   # -4.00 .. +3.99
+    pct    = (change / price * 100) if price else 0.0
+    arrow  = "▲" if change >= 0 else "▼"
+    high   = price * 1.25
+    low    = price * 0.72
+    mcap   = price * (s % 900 + 100) / 100.0     # billions
 
-        price  = float(hist["Close"].iloc[-1])
-        prev   = float(hist["Close"].iloc[-2]) if len(hist) > 1 else price
-        change = price - prev
-        pct    = (change / prev * 100) if prev else 0.0
-        arrow  = "▲" if change >= 0 else "▼"
-
-        fi = t.fast_info
-        mcap = (
-            f"  Market cap  : ${fi.market_cap / 1e9:.1f}B\n"
-            if hasattr(fi, "market_cap") and fi.market_cap else ""
-        )
-        return (
-            f"{ticker.upper()} — Latest price: ${price:.2f}  "
-            f"{arrow} {change:+.2f} ({pct:+.2f}%)\n"
-            f"  52-week high: ${fi.year_high:.2f}\n"
-            f"  52-week low : ${fi.year_low:.2f}\n"
-            f"{mcap}"
-        )
-    except Exception as e:
-        return f"ERROR fetching stock data for {ticker!r}: {e}"
+    return (
+        f"{tk} — Latest price: ${price:.2f}  "
+        f"{arrow} {change:+.2f} ({pct:+.2f}%)\n"
+        f"  52-week high: ${high:.2f}\n"
+        f"  52-week low : ${low:.2f}\n"
+        f"  Market cap  : ${mcap:.1f}B"
+    )
 
 
 # Registries
 
 FS_TOOLS  = [list_files, file_read, file_write]
 MCP_TOOLS = [calculate, get_weather, get_stock_price]
-ALL_TOOLS = FS_TOOLS + MCP_TOOLS

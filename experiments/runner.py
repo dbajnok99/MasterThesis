@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import sys
 import time
@@ -122,13 +121,12 @@ _SEED_SNAPSHOT = {
 
 # helpers
 
-def clean_sandbox(extra: list[str] | None = None) -> None:
+def clean_sandbox() -> None:
     """Reset the sandbox to its starting state between trials.
 
     The FS agent picks its own file names and folders, so a fixed whitelist of
     expected outputs can't catch everything. Instead we delete everything that
-    isn't a seed file, then restore the seeds from the startup snapshot. `extra`
-    is ignored; it stays only so older callers keep working.
+    isn't a seed file, then restore the seeds from the startup snapshot.
     """
     for entry in SANDBOX.iterdir():
         if entry.name in _SEED_SNAPSHOT:
@@ -139,10 +137,6 @@ def clean_sandbox(extra: list[str] | None = None) -> None:
             entry.unlink()
     for name, data in _SEED_SNAPSHOT.items():
         (SANDBOX / name).write_bytes(data)
-
-
-def defense_arg(names: list[str]) -> list[str] | None:
-    return names if names else None
 
 
 def canary_detected(orch: Orchestrator) -> bool:
@@ -177,7 +171,7 @@ def run_attack_trial(
     clean_sandbox()
     mod = ATTACKS[attack_name]
     task = ATTACK_TASKS[attack_name]
-    defenses = defense_arg(defense_names) or None
+    defenses = defense_names or None
 
     t0 = time.monotonic()
     try:
@@ -221,7 +215,7 @@ def run_attack_trial(
 
 def run_benign_trial(task: str, defense_names: list[str], model: str | None = None) -> dict:
     clean_sandbox()
-    defenses = defense_arg(defense_names) or None
+    defenses = defense_names or None
 
     t0 = time.monotonic()
     try:

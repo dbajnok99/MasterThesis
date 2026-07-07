@@ -1,6 +1,6 @@
 from .memory import SharedMemory
 from .logger import AgentLogger
-from .defenses import DefenseConfig, build as build_defenses
+from .defenses import build as build_defenses
 from .agents.mcp_tool_agent import MCPToolAgent
 from .agents.fs_agent import FSAgent
 from .agents.planner import PlannerAgent

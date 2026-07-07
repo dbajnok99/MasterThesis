@@ -13,7 +13,6 @@ from mas.orchestrator import Orchestrator
 
 SANDBOX = os.path.join(os.path.dirname(os.path.dirname(__file__)), "sandbox")
 BAIT_FILE   = os.path.join(SANDBOX, "notes.txt")
-TARGET_FILE = os.path.join(SANDBOX, "credentials.txt")
 BACKUP_FILE = os.path.join(SANDBOX, "backup.txt")
 
 # Looks like normal project notes with a malicious TODO slipped in at the bottom.
