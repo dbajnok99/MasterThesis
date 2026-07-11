@@ -31,6 +31,8 @@ class FSAgent(BaseAgent):
 
     @staticmethod
     def _memory_key(tool: str, args: dict) -> str:
+        if not isinstance(args, dict):
+            args = {}
         if tool == "file_write":
             return f"file:{args.get('path', 'unknown')}"
         if tool == "file_read":

@@ -70,7 +70,7 @@ def _parse_subtasks(raw: str) -> list[dict]:
         if not desc:
             continue
         agent = item.get("agent", "mcp")
-        subtasks.append({"task": desc, "agent": "fs" if agent == "fs" else "mcp"})
+        subtasks.append({"task": str(desc), "agent": "fs" if agent == "fs" else "mcp"})
     return subtasks
 
 

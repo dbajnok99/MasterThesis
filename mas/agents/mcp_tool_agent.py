@@ -31,10 +31,12 @@ class MCPToolAgent(BaseAgent):
 
     @staticmethod
     def _memory_key(tool: str, args: dict) -> str:
+        if not isinstance(args, dict):
+            args = {}
         if tool == "get_weather":
             return f"weather:{args.get('location', 'unknown')}"
         if tool == "get_stock_price":
-            return f"stock:{args.get('ticker', 'unknown').upper()}"
+            return f"stock:{(args.get('ticker') or 'unknown').upper()}"
         if tool == "calculate":
             return f"calc:{args.get('expression', '?')}"
         return tool

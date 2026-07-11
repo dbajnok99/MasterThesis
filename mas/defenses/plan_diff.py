@@ -43,8 +43,9 @@ class PlanDiffDefense:
             {"role": "user",   "content": prompt},
         ], max_tokens=400)
         try:
-            suspicious = set(json.loads(raw.strip()).get("suspicious", []))
-        except json.JSONDecodeError:
+            raw_suspicious = json.loads(raw.strip()).get("suspicious", [])
+            suspicious = {x for x in raw_suspicious if isinstance(x, str)}
+        except (json.JSONDecodeError, AttributeError, TypeError):
             return augmented
 
         return [s for s in augmented if s["task"] not in suspicious]
