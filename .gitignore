@@ -12,7 +12,7 @@ venv/
 logs/*
 !logs/results_paid_api.json
 !logs/results_free_local.json
-
+!logs/_claude.json
 
 literature/
 expose/
