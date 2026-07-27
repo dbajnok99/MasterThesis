@@ -47,8 +47,10 @@ flowchart LR
     MCPToolAgent --> get_weather
     MCPToolAgent --> get_stock_price
 
+    FSAgent --> list_files
     FSAgent --> file_read
     FSAgent --> file_write
+    list_files <--> Sandbox
     file_read <--> Sandbox
     file_write <--> Sandbox
 
@@ -104,7 +106,7 @@ python main.py chat --log logs/session.jsonl
 
 Each run produces a JSON log with the full event trace, tool calls, and memory state.
 
-The `run`, `chat`, and `attack` commands all accept `--model MODEL` to override `MAS_MODEL` and `--defend {canary,intent-anchor,plan-diff,spotlight}` (repeatable) to enable defences.
+The `run`, `chat`, and `attack` commands all accept `--model MODEL` to override `MAS_MODEL` and `--defend {canary,intent-anchor,plan-diff,spotlight,trust}` (repeatable) to enable defences.
 
 ## Defences
 
@@ -199,7 +201,8 @@ mas/
   defenses/
     canary.py
     intent_anchor.py
-    plan_diff.py         (spotlight lives in __init__.py)
+    plan_diff.py
+    trust.py             (spotlight lives in __init__.py)
 
 attacks/                seven attack scenarios
   memory_poison.py

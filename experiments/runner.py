@@ -1,7 +1,7 @@
 """
 Experiment runner for the MAS security testbed.
 
-Runs all 7 attacks under 6 defense conditions and 20 benign tasks under 5 defense
+Runs all 7 attacks under 7 defense conditions and 20 benign tasks under 7 defense
 conditions, collecting attack success rates, false positive rates, and latency.
 Results are grouped by model so multiple LLMs can be compared in one run.
 

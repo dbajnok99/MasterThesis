@@ -44,8 +44,9 @@ COND_LABELS = {
 
 DEFENSE_ORDER = ["none", "canary", "intent", "plan_diff", "spotlight", "trust", "all"]
 CANARY_ATTACKS = [
-    "memory_poison", "cross_agent_propagation",
-    "planner_hijack", "tool_result_poisoning",
+    "memory_poison", "indirect_injection", "cross_agent_propagation",
+    "planner_hijack", "system_prompt_extraction",
+    "memory_membership_probe", "tool_result_poisoning",
 ]
 
 # Map model ID to the label slug used in thesis table labels
