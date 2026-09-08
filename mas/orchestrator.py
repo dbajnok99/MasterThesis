@@ -1,3 +1,4 @@
+import config as cfg
 from .memory import SharedMemory
 from .logger import AgentLogger
 from .defenses import build as build_defenses
@@ -14,20 +15,20 @@ class Orchestrator:
         self.memory  = SharedMemory(logger=self.logger)
         self.history: list[dict] = []
 
-        cfg = build_defenses(defenses, model=model) if defenses else None
+        active_defenses = build_defenses(defenses, model=model) if defenses else None
 
         self.mcp_agent = MCPToolAgent(
             agent_id      = "mcp_agent",
             shared_memory = self.memory,
             logger        = self.logger,
-            defenses      = cfg,
+            defenses      = active_defenses,
             model         = model,
         )
         self.fs_agent = FSAgent(
             agent_id      = "fs_agent",
             shared_memory = self.memory,
             logger        = self.logger,
-            defenses      = cfg,
+            defenses      = active_defenses,
             model         = model,
         )
         self.planner = PlannerAgent(
@@ -36,14 +37,14 @@ class Orchestrator:
             logger        = self.logger,
             mcp_agent     = self.mcp_agent,
             fs_agent      = self.fs_agent,
-            defenses      = cfg,
+            defenses      = active_defenses,
             model         = model,
         )
 
-        if cfg and cfg.canary:
-            cfg.canary.inject(self.memory)
+        if active_defenses and active_defenses.canary:
+            active_defenses.canary.inject(self.memory, sandbox_dir=cfg.SANDBOX_DIR)
 
-        self._defenses = cfg
+        self._defenses = active_defenses
 
     def run(self, task: str) -> str:
         result = self.planner.process(task, history=self.history)

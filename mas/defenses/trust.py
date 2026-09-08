@@ -13,6 +13,8 @@ can never turn into a plan step.
 """
 from __future__ import annotations
 
+from .spotlight import encode as spotlight_encode
+
 # Trust levels, highest to lowest.
 SYSTEM      = 3   # the planner's own plan or result
 AGENT       = 2   # a worker agent's own result (a calculation, a write confirmation)
@@ -38,23 +40,22 @@ def trust_of(owner_id: str, key: str) -> int:
 class TrustHierarchyDefense:
     """Filters the shared memory an agent sees, by trust level."""
 
-    # The planner may only plan from entries at this level or above. Anything
-    # lower (file contents, or an unknown writer) is hidden, so an injected
-    # instruction never reaches the plan.
     PLANNER_MIN_TRUST = TOOL
 
-    def context_lines(self, agent_id: str, entries: dict) -> list[str]:
+    def context_lines(self, agent_id: str, entries: dict, spotlight: bool = False) -> list[str]:
         """Return the memory lines this agent is allowed to see."""
         lines: list[str] = []
         for key, entry in entries.items():
             level = trust_of(entry.owner_id, key)
             if agent_id == "planner" and level < self.PLANNER_MIN_TRUST:
-                continue                # hide low-trust entries from the planner
+                continue
             if level <= ENVIRONMENT:
                 lines.append(
                     f"  [{key}] (trust: environment, owner: {entry.owner_id}): "
                     f"<untrusted>{entry.value}</untrusted>"
                 )
+            elif spotlight:
+                lines.append(f"  [{key}] (owner: {entry.owner_id}): {spotlight_encode(entry.value)}")
             else:
                 lines.append(f"  [{key}] (owner: {entry.owner_id}): {entry.value}")
         return lines

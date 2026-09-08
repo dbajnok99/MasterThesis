@@ -24,6 +24,11 @@ Return JSON with no markdown:
 If nothing looks suspicious, return {"suspicious": []}."""
 
 
+def _normalize(text: str) -> str:
+    """Collapse whitespace/punctuation/case so a paraphrased echo still matches."""
+    return " ".join(text.lower().strip().rstrip(".,;:").split())
+
+
 class PlanDiffDefense:
 
     def __init__(self, model: str | None = None):
@@ -44,8 +49,8 @@ class PlanDiffDefense:
         ], max_tokens=400)
         try:
             raw_suspicious = json.loads(raw.strip()).get("suspicious", [])
-            suspicious = {x for x in raw_suspicious if isinstance(x, str)}
+            suspicious = {_normalize(x) for x in raw_suspicious if isinstance(x, str)}
         except (json.JSONDecodeError, AttributeError, TypeError):
             return augmented
 
-        return [s for s in augmented if s["task"] not in suspicious]
+        return [s for s in augmented if _normalize(s["task"]) not in suspicious]

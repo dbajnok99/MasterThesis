@@ -27,7 +27,6 @@ import attacks.memory_membership_probe as memory_membership_probe
 import attacks.tool_result_poisoning as tool_result_poisoning
 
 
-# Logging helpers
 
 def _snapshot(orch: Orchestrator, task: str, result: str) -> dict:
     """Serialise one task's full execution state."""
@@ -59,7 +58,6 @@ def _clear_run_state(orch: Orchestrator) -> None:
     orch.logger.events.clear()
 
 
-# Commands
 
 def cmd_run(args) -> None:
     orch   = Orchestrator(verbose=not args.quiet, defenses=args.defend, model=args.model)
@@ -128,8 +126,6 @@ ATTACK_DEFAULT_TASKS = {
 def cmd_attack(args) -> None:
     mod  = ATTACK_SCENARIOS[args.scenario]
     log  = Path(args.log) if args.log else None
-    task = args.task
-
     task = args.task or ATTACK_DEFAULT_TASKS.get(args.scenario, "run a task")
     orch, result, attack_meta = mod.run(task=task, verbose=not args.quiet, defenses=args.defend,
                                         model=args.model)
@@ -139,27 +135,27 @@ def cmd_attack(args) -> None:
     print(f"  TASK   : {task}")
     print(f"  RESULT : {'SUCCESS' if attack_meta['success'] else 'FAILED'}")
     if attack_meta.get("propagation_success"):
-        print(f"  infection propagated: mcp_agent acted on poison from shared memory")
+        print("  infection propagated: mcp_agent acted on poison from shared memory")
     if attack_meta.get("unauthorized_subtask"):
-        print(f"  planner injected unauthorized subtasks into the plan")
+        print("  planner injected unauthorized subtasks into the plan")
     if attack_meta.get("credentials_read"):
-        print(f"  credentials.txt was read by the agent")
+        print("  credentials.txt was read by the agent")
     if attack_meta.get("leaked_phrases"):
         print(f"  system prompt phrases leaked: {attack_meta['leaked_phrases']}")
     if attack_meta.get("output_created"):
-        print(f"  system_info.txt created — contents:")
+        print("  system_info.txt created — contents:")
         for line in (attack_meta.get("output_content") or "").splitlines():
             print(f"    {line}")
     if attack_meta.get("dump_created"):
         print(f"  memory_dump.txt created — leaked keys: {attack_meta.get('leaked_keys')}")
     if attack_meta.get("poisoned_in_memory"):
-        print(f"  poisoned tool result propagated into shared memory")
+        print("  poisoned tool result propagated into shared memory")
     if attack_meta.get("exfil_created"):
-        print(f"  exfil.txt created — contents:")
+        print("  exfil.txt created — contents:")
         for line in (attack_meta["exfil_content"] or "").splitlines():
             print(f"    {line}")
     if attack_meta.get("backup_created"):
-        print(f"  backup.txt created — contents:")
+        print("  backup.txt created — contents:")
         for line in (attack_meta["backup_content"] or "").splitlines():
             print(f"    {line}")
     print(f"{'═' * 60}\n")
@@ -171,7 +167,6 @@ def cmd_attack(args) -> None:
         print(f"[log saved → {log}]")
 
 
-# Entry point
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -180,7 +175,6 @@ def main() -> None:
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    # run
     p_run = sub.add_parser("run", help="Execute a single task")
     p_run.add_argument("task", help="Task description")
     p_run.add_argument("--log", metavar="FILE", help="Save run log to JSON file")
@@ -191,7 +185,6 @@ def main() -> None:
     p_run.add_argument("--model", metavar="MODEL", default=None,
                        help="LLM model override (e.g. gpt-4o, claude-sonnet-4-6)")
 
-    # chat
     p_chat = sub.add_parser("chat", help="Interactive chat session")
     p_chat.add_argument("--log", metavar="FILE", help="Append each turn to JSONL file")
     p_chat.add_argument("--quiet", "-q", action="store_true", help="Suppress step-by-step logging")
@@ -201,7 +194,6 @@ def main() -> None:
     p_chat.add_argument("--model", metavar="MODEL", default=None,
                         help="LLM model override (e.g. gpt-4o, claude-sonnet-4-6)")
 
-    # attack
     p_attack = sub.add_parser("attack", help="Run an attack scenario")
     p_attack.add_argument("scenario", choices=list(ATTACK_SCENARIOS.keys()))
     p_attack.add_argument("--task", default=None,

@@ -8,6 +8,7 @@ import config as cfg
 from .llm import make_raw_client
 from .memory import SharedMemory
 from .logger import AgentLogger
+from .defenses.spotlight import encode as spotlight_encode
 
 if TYPE_CHECKING:
     from .defenses import DefenseConfig
@@ -41,7 +42,8 @@ class BaseAgent(ABC):
         if not entries:
             return ""
         if self.defenses and self.defenses.trust:
-            body = self.defenses.trust.context_lines(self.agent_id, entries)
+            spotlight = bool(self.defenses.spotlight)
+            body = self.defenses.trust.context_lines(self.agent_id, entries, spotlight=spotlight)
             if not body:
                 return ""               # everything was withheld as too low-trust
             header = [
@@ -54,7 +56,7 @@ class BaseAgent(ABC):
         lines = ["Shared memory (results from prior subtasks):"]
         for key, entry in entries.items():
             if spotlight:
-                lines.append(f"  [{key}]: <data>{entry.value}</data>")
+                lines.append(f"  [{key}]: {spotlight_encode(entry.value)}")
             else:
                 lines.append(f"  [{key}] (owner: {entry.owner_id}): {entry.value}")
         return "\n".join(lines)

@@ -25,7 +25,11 @@ def _seed(text: str) -> int:
     return int(hashlib.sha256(text.strip().lower().encode()).hexdigest(), 16)
 
 
-# Sandbox tools
+def _in_sandbox(full_path: str) -> bool:
+    """True if full_path is the sandbox dir itself or strictly inside it."""
+    sandbox = os.path.realpath(cfg.SANDBOX_DIR)
+    return full_path == sandbox or full_path.startswith(sandbox + os.sep)
+
 
 @tool
 def list_files() -> str:
@@ -45,7 +49,7 @@ def file_read(path: str) -> str:
     """Read a file from the sandbox workspace. 'path' is relative to the sandbox directory."""
     rel  = os.path.normpath(path)
     full = os.path.realpath(os.path.join(cfg.SANDBOX_DIR, rel))
-    if not full.startswith(os.path.realpath(cfg.SANDBOX_DIR)):
+    if not _in_sandbox(full):
         return "ERROR: path traversal denied"
     try:
         return open(full).read()
@@ -60,7 +64,7 @@ def file_write(path: str, content: str, append: bool = False) -> str:
     """Write 'content' to 'path' (relative to the sandbox workspace). Set append=True to add to an existing file instead of overwriting."""
     rel  = os.path.normpath(path)
     full = os.path.realpath(os.path.join(cfg.SANDBOX_DIR, rel))
-    if not full.startswith(os.path.realpath(cfg.SANDBOX_DIR)):
+    if not _in_sandbox(full):
         return "ERROR: path traversal denied"
     try:
         os.makedirs(os.path.dirname(full), exist_ok=True)
@@ -77,15 +81,15 @@ def calculate(expression: str) -> str:
     """Evaluate a simple arithmetic expression such as '6 * 7' or '(100 + 50) / 3'."""
     if not all(c in "0123456789+-*/()., " for c in expression):
         return "ERROR: expression contains unsafe characters"
+    if "**" in expression:
+        return "ERROR: exponentiation is not supported"
     try:
         return str(eval(expression, {"__builtins__": {}}))  # noqa: S307
     except Exception as e:
         return f"ERROR: {e}"
 
 
-# Fake weather and stock tools (no network)
-
-# Weather codes and what they mean (WMO standard)
+# WMO standard weather codes
 _WMO = {
     0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
     45: "Fog", 48: "Icy fog",
@@ -105,9 +109,7 @@ def get_weather(location: str) -> str:
     """
     if not location.strip():
         return "Location not found: ''"
-    # Fake weather: the numbers come from the city name, so the same city
-    # always gives the same result and no internet is needed. The text is
-    # made to look like a real weather API.
+    # deterministic on the city name, so no network call is needed
     s = _seed(location)
     codes = [0, 1, 2, 3, 45, 51, 61, 63, 71, 80, 95]
     condition = _WMO[codes[s % len(codes)]]
@@ -135,9 +137,7 @@ def get_stock_price(ticker: str) -> str:
     tk = ticker.upper().strip()
     if not tk:
         return "No data found for ticker: ''"
-    # Fake stock data: the numbers come from the ticker, so the same ticker
-    # always gives the same result and no internet is needed. The text is
-    # made to look like a real stock API.
+    # deterministic on the ticker, so no network call is needed
     s = _seed(tk)
     price  = 20 + (s % 40000) / 100.0     # 20.00 .. 419.99
     change = ((s // 100 % 800) - 400) / 100.0   # -4.00 .. +3.99
@@ -155,8 +155,6 @@ def get_stock_price(ticker: str) -> str:
         f"  Market cap  : ${mcap:.1f}B"
     )
 
-
-# Registries
 
 FS_TOOLS  = [list_files, file_read, file_write]
 MCP_TOOLS = [calculate, get_weather, get_stock_price]

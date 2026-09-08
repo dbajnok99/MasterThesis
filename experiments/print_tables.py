@@ -49,7 +49,6 @@ CANARY_ATTACKS = [
     "memory_membership_probe", "tool_result_poisoning",
 ]
 
-# Map model ID to the label slug used in thesis table labels
 MODEL_LABEL_SLUGS = {
     "gpt-4o":                    "gpt4o",
     "gpt-4o-mini":               "gpt4omini",
@@ -71,18 +70,31 @@ MODEL_DISPLAY = {
 }
 
 
-# helpers
-
 def load(path: str) -> dict:
     return json.loads(Path(path).read_text())
 
 
+def wilson_ci(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """95% Wilson score interval for a proportion (better than normal-approx at small n)."""
+    if n == 0:
+        return 0.0, 0.0
+    phat = successes / n
+    denom = 1 + z * z / n
+    center = phat + z * z / (2 * n)
+    margin = z * ((phat * (1 - phat) / n + z * z / (4 * n * n)) ** 0.5)
+    lo = max(0.0, (center - margin) / denom)
+    hi = min(1.0, (center + margin) / denom)
+    return lo, hi
+
+
 def asr_cell(cell: dict | None) -> str:
-    if not cell:
+    if not cell or cell.get("asr") is None:
         return r"\emph{N/A}"
     asr = cell["asr"]
     n   = cell["n"]
-    val = f"{asr:.2f} ({n})"
+    successes = cell.get("successes", round(asr * n))
+    lo, hi = wilson_ci(successes, n)
+    val = f"{asr:.2f} ({n}) [{lo:.2f},{hi:.2f}]"
     if asr == 0.0:
         return r"\textbf{" + val + "}"
     return val
@@ -96,8 +108,6 @@ def mean_or_none(values: list[float]) -> float | None:
 def fmt(v: float | None, decimals: int = 2) -> str:
     return f"{v:.{decimals}f}" if v is not None else "N/A"
 
-
-# per-model ASR table
 
 def print_asr_table(model: str, summary: dict) -> None:
     attacks  = list(ATTACK_LABELS)
@@ -127,8 +137,8 @@ def print_asr_table(model: str, summary: dict) -> None:
     print(r"\begin{table}[htbp]")
     print(r"  \centering")
     print(f"  \\caption{{Attack success rates per attack and defence condition, {display}")
-    print(f"           ({n_label} trials per cell). \\textbf{{Bold}} values indicate the")
-    print(r"           attack was fully neutralised (ASR = 0).}")
+    print(f"           ({n_label} trials per cell, shown as ASR (n) [95\\% Wilson CI]).")
+    print(r"           \textbf{Bold} values indicate the attack was fully neutralised (ASR = 0).}")
     print(f"  \\label{{tab:asr-results-{slug}}}")
     print(r"  \resizebox{\textwidth}{!}{%")
     print(f"  \\begin{{tabular}}{{{col_fmt}}}")
@@ -144,15 +154,20 @@ def print_asr_table(model: str, summary: dict) -> None:
         label = ATTACK_LABELS[atk]
         print(f"    {label} & " + " & ".join(cells) + r" \\")
 
-    # mean row
+    # mean row: pool successes/trials across all 7 attacks so the CI reflects
+    # the larger combined N, not just one attack's small per-cell N
     means = []
     for c in conds:
-        vals = [
-            ((summary.get("attacks") or {}).get(a, {}).get(c) or {}).get("asr")
-            for a in attacks
-        ]
-        m = mean_or_none(vals)
-        means.append(fmt(m) if m is not None else r"\emph{N/A}")
+        cells = [(summary.get("attacks") or {}).get(a, {}).get(c) for a in attacks]
+        cells = [cell for cell in cells if cell and cell.get("asr") is not None]
+        if not cells:
+            means.append(r"\emph{N/A}")
+            continue
+        pooled_successes = sum(cell.get("successes", round(cell["asr"] * cell["n"])) for cell in cells)
+        pooled_n = sum(cell["n"] for cell in cells)
+        m = pooled_successes / pooled_n
+        lo, hi = wilson_ci(pooled_successes, pooled_n)
+        means.append(f"{m:.2f} [{lo:.2f},{hi:.2f}]")
 
     print(r"    \midrule")
     print(r"    \textbf{Mean ASR} & " + " & ".join(means) + r" \\")
@@ -162,8 +177,6 @@ def print_asr_table(model: str, summary: dict) -> None:
     print(r"\end{table}")
     print()
 
-
-# canary table (averaged across models)
 
 def print_canary_table(summaries: dict[str, dict]) -> None:
     print("% ── Canary detection table " + "─" * 44)
@@ -196,8 +209,6 @@ def print_canary_table(summaries: dict[str, dict]) -> None:
     print()
 
 
-# FPR table (averaged across models)
-
 def print_fpr_table(summaries: dict[str, dict]) -> None:
     print("% ── FPR table " + "─" * 57)
     print(r"\begin{table}[htbp]")
@@ -210,15 +221,13 @@ def print_fpr_table(summaries: dict[str, dict]) -> None:
     print(r"    \textbf{Defence} & \textbf{Mean FPR} & \textbf{Mean incorrectly blocked tasks} \\")
     print(r"    \midrule")
 
-    for cond in ["canary", "intent", "plan_diff", "spotlight", "all"]:
+    for cond in ["canary", "intent", "plan_diff", "spotlight", "trust", "all"]:
         fprs, blocked = [], []
         for s in summaries.values():
             cell = (s.get("benign") or {}).get(cond)
-            if cell:
-                fprs.append(cell.get("fpr"))
-                n = cell.get("n", 0)
-                fpr = cell.get("fpr", 0)
-                blocked.append(round(fpr * n))
+            if cell and cell.get("fpr") is not None:
+                fprs.append(cell["fpr"])
+                blocked.append(round(cell["fpr"] * cell["n"]))
         fpr_str     = fmt(mean_or_none(fprs))
         blocked_str = fmt(mean_or_none([float(b) for b in blocked]), decimals=1)
         label = COND_LABELS[cond]
@@ -229,8 +238,6 @@ def print_fpr_table(summaries: dict[str, dict]) -> None:
     print(r"\end{table}")
     print()
 
-
-# latency table (averaged across models)
 
 def print_latency_table(summaries: dict[str, dict]) -> None:
     print("% ── Latency table " + "─" * 53)
@@ -244,16 +251,15 @@ def print_latency_table(summaries: dict[str, dict]) -> None:
     print(r"    \textbf{Defence} & \textbf{Mean overhead (s)} & \textbf{Relative overhead (\%)} \\")
     print(r"    \midrule")
 
-    # compute per-model baseline first
     baselines: dict[str, float | None] = {}
     for model, s in summaries.items():
-        baselines[model] = (s.get("benign") or {}).get("none", {}).get("mean_s")
+        baselines[model] = ((s.get("benign") or {}).get("none") or {}).get("mean_s")
 
-    for cond in ["none", "canary", "intent", "plan_diff", "spotlight", "all"]:
+    for cond in ["none", "canary", "intent", "plan_diff", "spotlight", "trust", "all"]:
         abs_times, rel_pcts = [], []
         for model, s in summaries.items():
             cell = (s.get("benign") or {}).get(cond)
-            if cell:
+            if cell and cell.get("mean_s") is not None:
                 t = cell["mean_s"]
                 abs_times.append(t)
                 b = baselines.get(model)
@@ -282,8 +288,6 @@ def print_latency_table(summaries: dict[str, dict]) -> None:
     print()
 
 
-# main
-
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Print LaTeX tables from experiment results")
     p.add_argument("results", help="Path to results JSON file")
@@ -310,14 +314,12 @@ def main() -> None:
 
     models = ([args.model] if args.model else list(models_summary.keys()))
 
-    # ASR tables — one per model
     for model in models:
         if model not in models_summary:
             print(f"% model {model!r} not found in results, skipping")
             continue
         print_asr_table(model, models_summary[model])
 
-    # Aggregate tables — averaged across selected models
     selected = {m: models_summary[m] for m in models if m in models_summary}
     print_canary_table(selected)
     print_fpr_table(selected)

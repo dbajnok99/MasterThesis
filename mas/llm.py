@@ -77,7 +77,6 @@ def make_raw_client(model: str | None = None):
     return _OpenAIClient(model)
 
 
-# provider wrappers
 
 class _OpenAIClient:
     """Wraps openai.OpenAI with a unified call interface.

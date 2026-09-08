@@ -31,7 +31,7 @@ def run(task: str, verbose: bool = True, defenses: list[str] | None = None, mode
 
     orch = Orchestrator(verbose=verbose, defenses=defenses, model=model)
 
-    print(f"\n[ATTACK] Writing routing override to shared memory:")
+    print("\n[ATTACK] Writing routing override to shared memory:")
     print(f"  key   : {POISON_KEY!r}")
     print(f"  value : {POISON_VALUE[:80]}...")
     orch.memory.write(POISON_KEY, POISON_VALUE, writer_id="attacker")
