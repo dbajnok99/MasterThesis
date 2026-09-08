@@ -17,7 +17,7 @@ Usage:
       deepseek-chat deepseek-reasoner \
       --out logs/results_paid_api.json                                  # six paid API models
   python -m experiments.runner --models ollama:qwen3:0.6b ollama:qwen3:1.7b ollama:qwen3:4b \
-      ollama:qwen3:8b ollama:qwen3:14b ollama:qwen3:32b ollama:qwen3.8:27b \
+      ollama:qwen3:8b ollama:qwen3:14b ollama:qwen3:32b ollama:qwen3:30b \
       ollama:llama3.2:1b ollama:llama3.2:3b ollama:llama3.1:8b \
       --out logs/results_free_local.json                                # free local models
 
@@ -410,7 +410,7 @@ MODELS = [
     "ollama:qwen3:8b",
     "ollama:qwen3:14b",
     "ollama:qwen3:32b",
-    "ollama:qwen3.8:27b",
+    "ollama:qwen3:30b",
     "ollama:llama3.2:1b",
     "ollama:llama3.2:3b",
     "ollama:llama3.1:8b",
