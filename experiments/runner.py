@@ -16,9 +16,8 @@ Usage:
   python -m experiments.runner --models gpt-4o gpt-4o-mini claude-sonnet-4-6 claude-haiku-4-5-20251001 \
       deepseek-chat deepseek-reasoner \
       --out logs/results_paid_api.json                                  # six paid API models
-  python -m experiments.runner --models ollama:qwen3:0.6b ollama:qwen3:1.7b ollama:qwen3:4b \
-      ollama:qwen3:8b ollama:qwen3:14b ollama:qwen3:32b ollama:qwen3:30b \
-      ollama:llama3.2:1b ollama:llama3.2:3b ollama:llama3.1:8b \
+  python -m experiments.runner --models ollama:qwen2.5:0.5b ollama:qwen2.5:1.5b ollama:qwen2.5:3b \
+      ollama:qwen2.5:7b ollama:qwen2.5:14b ollama:llama3.2:1b ollama:llama3.2:3b ollama:llama3.1:8b \
       --out logs/results_free_local.json                                # free local models
 
   # If a run gets interrupted, re-run the exact same command with the same
@@ -402,15 +401,11 @@ def print_summary(summary: dict, model: str | None = None) -> None:
 
 
 MODELS = [
-    # Qwen3 ladder: one generation up from the original Qwen2.5 0.5b-14b
-    # ladder, same shape so the capability-scaling comparison still holds.
-    "ollama:qwen3:0.6b",
-    "ollama:qwen3:1.7b",
-    "ollama:qwen3:4b",
-    "ollama:qwen3:8b",
-    "ollama:qwen3:14b",
-    "ollama:qwen3:32b",
-    "ollama:qwen3:30b",
+    "ollama:qwen2.5:0.5b",
+    "ollama:qwen2.5:1.5b",
+    "ollama:qwen2.5:3b",
+    "ollama:qwen2.5:7b",
+    "ollama:qwen2.5:14b",
     "ollama:llama3.2:1b",
     "ollama:llama3.2:3b",
     "ollama:llama3.1:8b",
