@@ -2,7 +2,7 @@
 
 Supported providers and naming conventions:
   - Anthropic:  "claude-*"                      (needs ANTHROPIC_API_KEY)
-  - DeepSeek:   "deepseek-chat", "deepseek-reasoner"  (needs DEEPSEEK_API_KEY)
+  - DeepSeek:   "deepseek-*", e.g. "deepseek-v4-pro"  (needs DEEPSEEK_API_KEY)
   - Ollama:     "ollama:<tag>", e.g. "ollama:llama3.1:8b"  (free, local)
   - OpenAI:     everything else, e.g. "gpt-4o"   (needs OPENAI_API_KEY)
 

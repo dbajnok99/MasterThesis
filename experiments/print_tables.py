@@ -4,7 +4,7 @@ Read a completed experiment results JSON and print LaTeX-ready tables for Chapte
 Generates:
   - One ASR table per model (tab:asr-results-<model-slug>)
   - One canary detection table averaged across models
-  - One FPR table averaged across models
+  - One FPR and derailment table averaged across models
   - One latency overhead table averaged across models
 
 Usage:
@@ -16,7 +16,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -43,6 +45,20 @@ COND_LABELS = {
 }
 
 DEFENSE_ORDER = ["none", "canary", "intent", "plan_diff", "spotlight", "trust", "all"]
+
+DEFENSE_TO_COND = {
+    ():                  "none",
+    ("canary",):         "canary",
+    ("intent-anchor",):  "intent",
+    ("plan-diff",):      "plan_diff",
+    ("spotlight",):      "spotlight",
+    ("trust",):          "trust",
+    ("canary", "intent-anchor", "plan-diff", "spotlight", "trust"): "all",
+}
+
+# Base64 spotlighting can make weaker models try to decode their input instead
+# of answering. Nothing gets blocked, so these failures never show up in FPR.
+DERAIL_PATTERN = re.compile(r"decod|base64|encoded", re.IGNORECASE)
 CANARY_ATTACKS = [
     "memory_poison", "indirect_injection", "cross_agent_propagation",
     "planner_hijack", "system_prompt_extraction",
@@ -57,6 +73,8 @@ MODEL_LABEL_SLUGS = {
     "claude-haiku-4-5":          "haiku",
     "deepseek-chat":             "deepseekchat",
     "deepseek-reasoner":         "deepseekr1",
+    "deepseek-flash":            "deepseekflash",
+    "deepseek-v4-pro":           "deepseekv4pro",
 }
 
 MODEL_DISPLAY = {
@@ -67,6 +85,8 @@ MODEL_DISPLAY = {
     "claude-haiku-4-5":          r"\texttt{claude-haiku-4-5}",
     "deepseek-chat":             r"\texttt{deepseek-chat}",
     "deepseek-reasoner":         r"\texttt{deepseek-reasoner}",
+    "deepseek-flash":            r"\texttt{deepseek-flash}",
+    "deepseek-v4-pro":           r"\texttt{deepseek-v4-pro}",
 }
 
 
@@ -107,6 +127,22 @@ def mean_or_none(values: list[float]) -> float | None:
 
 def fmt(v: float | None, decimals: int = 2) -> str:
     return f"{v:.{decimals}f}" if v is not None else "N/A"
+
+
+def derail_rates(benign_trials: list[dict]) -> dict[str, dict[str, float]]:
+    """Share of benign tasks derailed into decoding, per model and condition."""
+    flags: dict[tuple[str, str], list[bool]] = defaultdict(list)
+    for t in benign_trials:
+        if t.get("error"):
+            continue
+        cond = DEFENSE_TO_COND.get(tuple(t.get("defense") or []))
+        if cond:
+            derailed = bool(DERAIL_PATTERN.search(t.get("result") or ""))
+            flags[(t.get("model") or "default", cond)].append(derailed)
+    rates: dict[str, dict[str, float]] = defaultdict(dict)
+    for (model, cond), v in flags.items():
+        rates[model][cond] = sum(v) / len(v)
+    return rates
 
 
 def print_asr_table(model: str, summary: dict) -> None:
@@ -209,29 +245,36 @@ def print_canary_table(summaries: dict[str, dict]) -> None:
     print()
 
 
-def print_fpr_table(summaries: dict[str, dict]) -> None:
+def print_fpr_table(summaries: dict[str, dict], derail: dict[str, dict[str, float]]) -> None:
     print("% ── FPR table " + "─" * 57)
     print(r"\begin{table}[htbp]")
     print(r"  \centering")
-    print(r"  \caption{False positive rates (FPR) per defence on the benign task suite,")
-    print(r"           averaged across all evaluated models.}")
+    print(r"  \caption{False positive rates (FPR) and derailment rates per defence on the")
+    print(r"           benign task suite, averaged across all evaluated models.")
+    print(r"           A task counts as derailed when the output fixates on decoding encoded")
+    print(r"           content instead of answering; nothing is blocked, so FPR does not")
+    print(r"           capture it. Detected by keyword match on the first 500 characters of")
+    print(r"           the output, so the rate is a lower bound.}")
     print(r"  \label{tab:fpr-results}")
-    print(r"  \begin{tabular}{lcc}")
+    print(r"  \begin{tabular}{lccc}")
     print(r"    \toprule")
-    print(r"    \textbf{Defence} & \textbf{Mean FPR} & \textbf{Mean incorrectly blocked tasks} \\")
+    print(r"    \textbf{Defence} & \textbf{Mean FPR} & \textbf{Mean incorrectly blocked tasks}"
+          r" & \textbf{Mean derailment rate} \\")
     print(r"    \midrule")
 
-    for cond in ["canary", "intent", "plan_diff", "spotlight", "trust", "all"]:
-        fprs, blocked = [], []
-        for s in summaries.values():
+    for cond in DEFENSE_ORDER:
+        fprs, blocked, derails = [], [], []
+        for model, s in summaries.items():
             cell = (s.get("benign") or {}).get(cond)
             if cell and cell.get("fpr") is not None:
                 fprs.append(cell["fpr"])
                 blocked.append(round(cell["fpr"] * cell["n"]))
+            derails.append(derail.get(model, {}).get(cond))
         fpr_str     = fmt(mean_or_none(fprs))
         blocked_str = fmt(mean_or_none([float(b) for b in blocked]), decimals=1)
+        derail_str  = fmt(mean_or_none(derails))
         label = COND_LABELS[cond]
-        print(f"    {label} & {fpr_str} & {blocked_str} \\\\")
+        print(f"    {label} & {fpr_str} & {blocked_str} & {derail_str} \\\\")
 
     print(r"    \bottomrule")
     print(r"  \end{tabular}")
@@ -322,7 +365,7 @@ def main() -> None:
 
     selected = {m: models_summary[m] for m in models if m in models_summary}
     print_canary_table(selected)
-    print_fpr_table(selected)
+    print_fpr_table(selected, derail_rates(data.get("benign_trials", [])))
     print_latency_table(selected)
 
 

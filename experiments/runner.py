@@ -14,7 +14,7 @@ Usage:
 
   # The two thesis runs:
   python -m experiments.runner --models gpt-4o gpt-4o-mini claude-sonnet-4-6 claude-haiku-4-5-20251001 \
-      deepseek-chat deepseek-reasoner \
+      deepseek-flash deepseek-v4-pro \
       --out logs/results_paid_api.json                                  # six paid API models
   python -m experiments.runner --models ollama:qwen2.5:0.5b ollama:qwen2.5:1.5b ollama:qwen2.5:3b \
       ollama:qwen2.5:7b ollama:qwen2.5:14b ollama:llama3.2:1b ollama:llama3.2:3b ollama:llama3.1:8b \
@@ -411,7 +411,7 @@ MODELS = [
     "ollama:llama3.1:8b",
     "gpt-4o", "gpt-4o-mini",
     "claude-sonnet-4-6", "claude-haiku-4-5-20251001",
-    "deepseek-chat", "deepseek-reasoner",
+    "deepseek-flash", "deepseek-v4-pro",
 ]
 
 

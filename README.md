@@ -178,7 +178,7 @@ python -m experiments.print_tables logs/results_paid_api.json
 
 The thesis reports two complete runs, both committed under `logs/`:
 
-- `logs/results_paid_api.json` — six paid API models across three vendors (`gpt-4o`, `gpt-4o-mini`, `claude-sonnet-4-6`, `claude-haiku-4-5-20251001`, `deepseek-chat`, `deepseek-reasoner`)
+- `logs/results_paid_api.json` — six paid API models across three vendors (`gpt-4o`, `gpt-4o-mini`, `claude-sonnet-4-6`, `claude-haiku-4-5-20251001`, `deepseek-flash`, `deepseek-v4-pro`)
 - `logs/results_free_local.json` — eight free open-weight models run locally through Ollama (Qwen2.5 at 0.5B / 1.5B / 3B / 7B / 14B, plus Llama 3.2 1B/3B and Llama 3.1 8B)
 
 ## Project Structure
