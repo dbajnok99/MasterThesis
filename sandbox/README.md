@@ -2,7 +2,7 @@
 
 Agent workspace for the Multi-Agent Security Testbed.
 
-The `ToolAgent` can read and write files in this directory via the `file_read` and `file_write` tools. All paths are restricted to this directory — traversal outside it is blocked.
+The `FSAgent` can list, read and write files in this directory via the `list_files`, `file_read` and `file_write` tools. All paths are restricted to this directory; traversal outside it is blocked.
 
 ## Files
 

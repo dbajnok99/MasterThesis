@@ -110,11 +110,11 @@ The `run`, `chat`, and `attack` commands all accept `--model MODEL` to override 
 
 ## Defences
 
-Five defences can be switched on individually or in any combination with `--defend`, which is what makes the leave-one-out evaluation possible:
+Five defences can be switched on individually or in any combination with `--defend`; the evaluation runs each one on its own and all five together:
 
 | Defence | Flag | What it does |
 |---|---|---|
-| Canary tokens | `canary` | Seeds fake secrets into shared memory and scans the final memory and all tool arguments after the run for any that leaked. |
+| Canary tokens | `canary` | Seeds fake secrets into shared memory and one token line into `credentials.txt`, then scans the final answer and all tool arguments and outputs after the run for any that leaked. Detects, does not prevent. |
 | Intent anchoring | `intent-anchor` | Extracts the user's original intent at planning time and drops any subtask that does not match it. |
 | Counterfactual plan diffing | `plan-diff` | Re-plans the task without the (possibly poisoned) shared-memory context and removes subtasks that only appear in the memory-augmented plan. |
 | Output spotlighting | `spotlight` | Wraps every tool output in `<data>` tags and instructs agents to treat tagged content as data, never as instructions. |
@@ -172,8 +172,9 @@ python -m experiments.runner
 # Choose which models to evaluate
 python -m experiments.runner --models gpt-4o claude-sonnet-4-6 ollama:qwen2.5:7b
 
-# Regenerate the LaTeX result tables from a results file
-python -m experiments.print_tables logs/results_paid_api.json
+# Regenerate every result table the thesis includes, from both result logs
+# (writes tables_*.tex and appendix_permodel_*.tex into thesis/chapters/, or --out DIR)
+python -m experiments.thesis_tables
 ```
 
 The thesis reports two complete runs, both committed under `logs/`:
@@ -194,17 +195,21 @@ mas/
   orchestrator.py       wires everything together
   llm.py                provider factory (OpenAI / Anthropic / DeepSeek / Ollama)
   tools.py              LangChain tool definitions (fs + mcp)
+  provenance.py         reconstructs cross-agent data flow from the event log
   agents/
     planner.py
     mcp_tool_agent.py
     fs_agent.py
   defenses/
+    __init__.py          DefenseConfig + build(): which defences are on
     canary.py
     intent_anchor.py
     plan_diff.py
-    trust.py             (spotlight lives in __init__.py)
+    spotlight.py
+    trust.py
 
 attacks/                seven attack scenarios
+  __init__.py           scenario registry + the user task each attack is evaluated with
   memory_poison.py
   indirect_injection.py
   cross_agent_propagation.py
@@ -215,7 +220,7 @@ attacks/                seven attack scenarios
 
 experiments/
   runner.py             full (model × attack × defence) sweep
-  print_tables.py       LaTeX result tables
+  thesis_tables.py      all result tables included by the thesis, from the two logs
 
 sandbox/                agent file workspace + fictional target files
 logs/                   committed benchmark results (other run logs git-ignored)

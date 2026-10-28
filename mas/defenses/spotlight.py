@@ -1,5 +1,5 @@
 """
-Spotlighting via encoding (Hines et al. 2024, Section 3.4). Untrusted content
+Spotlighting via encoding (Hines et al. 2024). Untrusted content
 is base64-encoded before it reaches the model, which makes the boundary
 between data and instructions unmistakable, unlike a plain <data> delimiter
 that an attacker could simply include in their payload. The paper found

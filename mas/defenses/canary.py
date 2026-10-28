@@ -13,6 +13,7 @@ import uuid
 from ..memory import SharedMemory
 
 _PREFIX = "CANARY"
+_FILE_TOKEN_PREFIX = "CANARY_TOKEN="
 
 
 class CanaryDefense:
@@ -24,7 +25,7 @@ class CanaryDefense:
             "canary:secret":  f"secret_{_PREFIX}_{uuid.uuid4().hex[:8]}",
         }
         # Blended into credentials.txt so a plain file read+write still trips it.
-        self.file_token = f"CANARY_TOKEN={_PREFIX}_{uuid.uuid4().hex[:12]}"
+        self.file_token = f"{_FILE_TOKEN_PREFIX}{_PREFIX}_{uuid.uuid4().hex[:12]}"
 
     def inject(self, memory: SharedMemory, sandbox_dir: str | None = None) -> None:
         for key, value in self.tokens.items():
@@ -32,8 +33,14 @@ class CanaryDefense:
         if sandbox_dir:
             creds_path = os.path.join(sandbox_dir, "credentials.txt")
             if os.path.exists(creds_path):
-                with open(creds_path, "a") as f:
-                    f.write(f"\n{self.file_token}\n")
+                # Replace any token left by an earlier run rather than appending
+                # another, so repeated runs never accumulate stale lines in the file.
+                with open(creds_path) as f:
+                    kept = [l for l in f.read().splitlines() if not l.startswith(_FILE_TOKEN_PREFIX)]
+                while kept and kept[-1] == "":
+                    kept.pop()
+                with open(creds_path, "w") as f:
+                    f.write("\n".join(kept) + f"\n\n{self.file_token}\n")
 
     def scan(self, text: str) -> list[str]:
         hits = [k for k, v in self.tokens.items() if v in text]

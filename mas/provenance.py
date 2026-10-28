@@ -5,12 +5,12 @@ guessing propagation happened because the final artefact looks right.
 Every subtask already logs `memory_write` (who wrote a key) and
 `memory_context_used` (what keys an agent saw when it started). Walking that
 timeline tells us when agent B saw a key agent A wrote, and whether B's own
-tool calls afterward actually contain that value — i.e. B didn't just have
+tool calls afterward actually contain that value, i.e. B didn't just have
 access to A's data, it used it.
 """
 from __future__ import annotations
 
-_SNIPPET_LEN = 40  # chars of a written value used to spot reuse downstream
+_SNIPPET_LEN = 40
 
 
 def build_provenance(events: list[dict]) -> list[dict]:
@@ -19,7 +19,7 @@ def build_provenance(events: list[dict]) -> list[dict]:
     Each edge: {"key", "writer", "reader", "write_index", "read_index",
     "value_snippet", "reused"}.
     """
-    last_write: dict[str, tuple[str, int, str]] = {}  # key -> (writer, event_index, value)
+    last_write: dict[str, tuple[str, int, str]] = {}
     edges: list[dict] = []
 
     for i, ev in enumerate(events):
