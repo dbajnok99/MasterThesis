@@ -89,7 +89,7 @@ class AgentLogger:
 
     def defense_canary_hit(self, agent_id: str, triggered: list[str]) -> None:
         self._record("defense_canary_hit", agent_id, triggered=triggered)
-        self._emit(agent_id, f"\033[91m[canary] exfiltration detected — triggered: {triggered}\033[0m")
+        self._emit(agent_id, f"\033[91m[canary] exfiltration detected, triggered: {triggered}\033[0m")
 
     def result(self, agent_id: str, value: str) -> None:
         self._record("result", agent_id, value=value)

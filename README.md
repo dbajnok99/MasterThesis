@@ -1,6 +1,6 @@
 # Securing Agentic Architectures
 
-Diploma thesis project — [E191 Institute of Computer Engineering](https://www.tuwien.at/en/inf/e191), TU Wien
+Diploma thesis project at [E191 Institute of Computer Engineering](https://www.tuwien.at/en/inf/e191), TU Wien
 **Advisor:** Univ.Prof. Ezio Bartocci
 **Co-Advisor:** Asst.Prof. Gianluca Bonifazi
 **Field:** Computer Sciences
@@ -59,9 +59,9 @@ flowchart LR
 
 The system has three agents:
 
-- **Planner** — decomposes the user task into subtasks, routes them to the right agent, and synthesizes a final answer
-- **MCPToolAgent** — handles external/computation tools: weather, stock prices, calculations
-- **FSAgent** — handles file operations in the sandbox: reading, writing, listing
+- **Planner**: decomposes the user task into subtasks, routes them to the right agent, and synthesizes a final answer
+- **MCPToolAgent**: handles external/computation tools: weather, stock prices, calculations
+- **FSAgent**: handles file operations in the sandbox: reading, writing, listing
 
 All agents coordinate through a shared **SharedMemory** store (key/value, versioned); it is the only channel they exchange information through. The **AgentLogger** is a passive observability layer that records every action (memory reads and writes, tool calls, subtask dispatches) but never moves data between agents. After each tool call the result goes directly into shared memory under a semantic key (`weather:Vienna`, `stock:NVDA`, `file_content:notes.txt`), so later subtasks can reuse it without re-running the tool.
 
@@ -81,7 +81,7 @@ DEEPSEEK_API_KEY=...           # deepseek-* (optional)
 OLLAMA_BASE_URL=http://localhost:11434/v1   # local open-weight models, no key needed
 ```
 
-Local open-weight models run through [Ollama](https://ollama.com/) at no cost — start it with `ollama serve` and pull a tool-capable model (`ollama pull qwen2.5:7b`).
+Local open-weight models run through [Ollama](https://ollama.com/) at no cost. Start it with `ollama serve` and pull a tool-capable model (`ollama pull qwen2.5:7b`).
 
 ### 2. Install dependencies
 
@@ -117,8 +117,8 @@ Five defences can be switched on individually or in any combination with `--defe
 | Canary tokens | `canary` | Seeds fake secrets into shared memory and one token line into `credentials.txt`, then scans the final answer and all tool arguments and outputs after the run for any that leaked. Detects, does not prevent. |
 | Intent anchoring | `intent-anchor` | Extracts the user's original intent at planning time and drops any subtask that does not match it. |
 | Counterfactual plan diffing | `plan-diff` | Re-plans the task without the (possibly poisoned) shared-memory context and removes subtasks that only appear in the memory-augmented plan. |
-| Output spotlighting | `spotlight` | Wraps every tool output in `<data>` tags and instructs agents to treat tagged content as data, never as instructions. |
-| Trust hierarchy | `trust` | Labels each shared-memory entry by provenance (which agent wrote it, what kind of data it holds) and keeps low-trust, environment-derived content out of the planner's decomposition. Deterministic — no extra LLM calls. |
+| Output spotlighting | `spotlight` | Base64-encodes every tool output and every shared-memory entry before the model sees it, and tells the worker agents to decode such content but never follow instructions inside it. |
+| Trust hierarchy | `trust` | Labels each shared-memory entry by provenance (which agent wrote it, what kind of data it holds) and keeps low-trust, environment-derived content out of the planner's decomposition. Deterministic, no extra LLM calls. |
 
 ## Attack Scenarios
 
@@ -134,7 +134,7 @@ There are seven scenarios, each targeting a distinct attack surface:
 |---|---|---|
 | Memory poisoning | `memory-poison` | Writes a malicious instruction into shared memory before the task runs. The planner reads all memory as context, so the poison gets injected into the LLM prompt and steers the agents into creating `exfil.txt`. |
 | Indirect injection | `indirect-injection` | Plants a poisoned `notes.txt` in the sandbox. A malicious TODO embedded in the file tricks the agent into reading `credentials.txt` and writing its contents to `backup.txt`. |
-| Cross-agent propagation | `cross-agent-propagation` | Same file-based injection, but the payload is a "system directive" that spreads through shared memory. The FSAgent reads the file and the directive lands in memory, where the MCPToolAgent picks it up on the next subtask. The MCPToolAgent has no file tools, so its result is written back to memory and a later FSAgent step exfiltrates it to `exfil.txt` — the infection crosses agents through shared memory. |
+| Cross-agent propagation | `cross-agent-propagation` | Same file-based injection, but the payload is a "system directive" that spreads through shared memory. The FSAgent reads the file and the directive lands in memory, where the MCPToolAgent picks it up on the next subtask. The MCPToolAgent has no file tools, so its result is written back to memory and a later FSAgent step exfiltrates it to `exfil.txt`, so the infection crosses agents through shared memory. |
 | Planner hijacking | `planner-hijack` | Writes a fake "routing policy" into shared memory. The planner reads it while decomposing the task and appends an unauthorized `fs` subtask (read `credentials.txt` → write `exfil.txt`) the user never asked for. |
 | System prompt extraction | `system-prompt-extraction` | Plants a `readme.txt` whose hidden "setup step" tells the agent to write its own system prompt verbatim to `system_info.txt`, leaking the agent's private instructions. |
 | Memory membership probe | `memory-membership-probe` | Plants a `config.txt` whose diagnostic directive makes the agent dump the entire shared-memory store (every key and value, including data other agents wrote) to `memory_dump.txt`. |
@@ -179,8 +179,8 @@ python -m experiments.thesis_tables
 
 The thesis reports two complete runs, both committed under `logs/`:
 
-- `logs/results_paid_api.json` — six paid API models across three vendors (`gpt-4o`, `gpt-4o-mini`, `claude-sonnet-4-6`, `claude-haiku-4-5-20251001`, `deepseek-flash`, `deepseek-v4-pro`)
-- `logs/results_free_local.json` — eight free open-weight models run locally through Ollama (Qwen2.5 at 0.5B / 1.5B / 3B / 7B / 14B, plus Llama 3.2 1B/3B and Llama 3.1 8B)
+- `logs/results_paid_api.json`: six paid API models across three vendors (`gpt-4o`, `gpt-4o-mini`, `claude-sonnet-4-6`, `claude-haiku-4-5-20251001`, `deepseek-flash`, `deepseek-v4-pro`)
+- `logs/results_free_local.json`: eight free open-weight models run locally through Ollama (Qwen2.5 at 0.5B / 1.5B / 3B / 7B / 14B, plus Llama 3.2 1B/3B and Llama 3.1 8B)
 
 ## Project Structure
 
@@ -239,18 +239,18 @@ If you use this testbed, please cite the archived release (see `CITATION.cff`):
 The attacks and defences build on the following work.
 
 **Attacks / threats**
-- Greshake et al. 2023 — [Not What You've Signed Up For: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection](https://arxiv.org/abs/2302.12173) (AISec) — indirect injection, tool-result poisoning, threat model
-- Perez & Ribeiro 2022 — [Ignore Previous Prompt: Attack Techniques For Language Models](https://arxiv.org/abs/2211.09527) (NeurIPS ML Safety Workshop) — prompt injection, planner hijacking
-- Chen et al. 2024 — [AgentPoison: Red-teaming LLM Agents via Poisoning Memory or Knowledge Bases](https://arxiv.org/abs/2407.12784) (NeurIPS) — memory poisoning
-- Lee & Tiwari 2024 — [Prompt Infection: LLM-to-LLM Prompt Injection within Multi-Agent Systems](https://arxiv.org/abs/2410.07283) — cross-agent propagation
-- Carlini et al. 2021 — Extracting Training Data from Large Language Models (USENIX Security) — system-prompt extraction, memory membership probing
-- Li et al. 2026 — [Les Dissonances: Cross-Tool Harvesting and Polluting in Pool-of-Tools Empowered LLM Agents](https://arxiv.org/abs/2504.03111) (NDSS) — tool-result poisoning
+- Greshake et al. 2023, [Not What You've Signed Up For: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection](https://arxiv.org/abs/2302.12173) (AISec): indirect injection, tool-result poisoning, threat model
+- Perez & Ribeiro 2022, [Ignore Previous Prompt: Attack Techniques For Language Models](https://arxiv.org/abs/2211.09527) (NeurIPS ML Safety Workshop): prompt injection, planner hijacking
+- Chen et al. 2024, [AgentPoison: Red-teaming LLM Agents via Poisoning Memory or Knowledge Bases](https://arxiv.org/abs/2407.12784) (NeurIPS): memory poisoning
+- Lee & Tiwari 2024, [Prompt Infection: LLM-to-LLM Prompt Injection within Multi-Agent Systems](https://arxiv.org/abs/2410.07283): cross-agent propagation
+- Carlini et al. 2021, Extracting Training Data from Large Language Models (USENIX Security): system-prompt extraction, memory membership probing
+- Li et al. 2026, [Les Dissonances: Cross-Tool Harvesting and Polluting in Pool-of-Tools Empowered LLM Agents](https://arxiv.org/abs/2504.03111) (NDSS): tool-result poisoning
 
 **Defences**
-- Hines et al. 2024 — [Defending Against Indirect Prompt Injection Attacks With Spotlighting](https://arxiv.org/abs/2403.14720) — output spotlighting
-- Ji et al. 2026 (SEAgent) — [Taming Various Privilege Escalation in LLM-Based Agent Systems: A Mandatory Access Control Framework](https://arxiv.org/abs/2601.11893) — provenance-based trust hierarchy
+- Hines et al. 2024, [Defending Against Indirect Prompt Injection Attacks With Spotlighting](https://arxiv.org/abs/2403.14720): output spotlighting
+- Ji et al. 2026 (SEAgent), [Taming Various Privilege Escalation in LLM-Based Agent Systems: A Mandatory Access Control Framework](https://arxiv.org/abs/2601.11893): provenance-based trust hierarchy
 
 **Benchmarks & surveys**
-- Zhang et al. 2025 — [Agent Security Bench (ASB): Formalizing and Benchmarking Attacks and Defenses in LLM-based Agents](https://arxiv.org/abs/2410.02644) (ICLR) — threat model, evaluation metrics
-- Ferrag et al. 2025 — [From Prompt Injections to Protocol Exploits: Threats in LLM-Powered AI Agents Workflows](https://www.sciencedirect.com/science/article/pii/S2405959525001997) (ICT Express)
-- Deng et al. 2025 — [AI Agents Under Threat: A Survey of Key Security Challenges and Future Pathways](https://dl.acm.org/doi/10.1145/3716628) (ACM Computing Surveys)
+- Zhang et al. 2025, [Agent Security Bench (ASB): Formalizing and Benchmarking Attacks and Defenses in LLM-based Agents](https://arxiv.org/abs/2410.02644) (ICLR): threat model, evaluation metrics
+- Ferrag et al. 2025, [From Prompt Injections to Protocol Exploits: Threats in LLM-Powered AI Agents Workflows](https://www.sciencedirect.com/science/article/pii/S2405959525001997) (ICT Express)
+- Deng et al. 2025, [AI Agents Under Threat: A Survey of Key Security Challenges and Future Pathways](https://dl.acm.org/doi/10.1145/3716628) (ACM Computing Surveys)

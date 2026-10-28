@@ -338,7 +338,7 @@ def aggregate(results: dict, model: str | None = None) -> dict:
 
 
 def print_summary(summary: dict, model: str | None = None) -> None:
-    label = f" — {model}" if model else ""
+    label = f" for {model}" if model else ""
     print("\n" + "=" * 70)
     print(f"ATTACK SUCCESS RATES (ASR){label}")
     print("=" * 70)
@@ -438,11 +438,11 @@ def main() -> None:
             results.setdefault("attack_trials", [])
             results.setdefault("benign_trials", [])
         except (json.JSONDecodeError, OSError) as exc:
-            print(f"Could not read existing {out_path} ({exc}) — starting fresh.")
+            print(f"Could not read existing {out_path} ({exc}), starting fresh.")
             results = None
 
     if results is not None:
-        # an errored trial isn't "done" — drop it so the loop below retries it
+        # an errored trial is not done, so drop it and let the loop below retry it
         n_before = len(results["attack_trials"]) + len(results["benign_trials"])
         results["attack_trials"] = [t for t in results["attack_trials"] if not t.get("error")]
         results["benign_trials"] = [t for t in results["benign_trials"] if not t.get("error")]

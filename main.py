@@ -71,7 +71,7 @@ def cmd_chat(args) -> None:
     orch = Orchestrator(verbose=not args.quiet, defenses=args.defend, model=args.model)
     log  = Path(args.log) if args.log else None
 
-    print("Multi-Agent System — chat mode  (type 'exit' or Ctrl-C to quit)\n")
+    print("Multi-Agent System, chat mode  (type 'exit' or Ctrl-C to quit)\n")
 
     while True:
         try:
@@ -118,19 +118,19 @@ def cmd_attack(args) -> None:
     if attack_meta.get("leaked_phrases"):
         print(f"  system prompt phrases leaked: {attack_meta['leaked_phrases']}")
     if attack_meta.get("output_created"):
-        print("  system_info.txt created — contents:")
+        print("  system_info.txt created, contents:")
         for line in (attack_meta.get("output_content") or "").splitlines():
             print(f"    {line}")
     if attack_meta.get("dump_created"):
-        print(f"  memory_dump.txt created — leaked keys: {attack_meta.get('leaked_keys')}")
+        print(f"  memory_dump.txt created, leaked keys: {attack_meta.get('leaked_keys')}")
     if attack_meta.get("poisoned_in_memory"):
         print("  poisoned tool result propagated into shared memory")
     if attack_meta.get("exfil_created"):
-        print("  exfil.txt created — contents:")
+        print("  exfil.txt created, contents:")
         for line in (attack_meta["exfil_content"] or "").splitlines():
             print(f"    {line}")
     if attack_meta.get("backup_created"):
-        print("  backup.txt created — contents:")
+        print("  backup.txt created, contents:")
         for line in (attack_meta["backup_content"] or "").splitlines():
             print(f"    {line}")
     print(f"{'═' * 60}\n")

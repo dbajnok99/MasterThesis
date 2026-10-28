@@ -9,7 +9,7 @@ abstract: >-
   probing, and tool result poisoning) and five defences (canary tokens, intent
   anchoring, counterfactual plan diffing, output spotlighting, and a provenance-based
   trust hierarchy), evaluated across fourteen models (six paid API models across
-  three vendors --- OpenAI, Anthropic, and DeepSeek --- and eight free local
+  three vendors (OpenAI, Anthropic, and DeepSeek) and eight free local
   open-weight models).
 type: software
 authors:

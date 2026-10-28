@@ -54,7 +54,7 @@ def file_read(path: str) -> str:
     try:
         return open(full).read()
     except FileNotFoundError:
-        return f"ERROR: file not found – {rel}"
+        return f"ERROR: file not found: {rel}"
     except Exception as e:
         return f"ERROR: {e}"
 
