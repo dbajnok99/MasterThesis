@@ -17,10 +17,10 @@ authors:
     given-names: "Dénes Ágoston"
     affiliation: "TU Wien"
 version: 1.0.0
-date-released: "2026-07-04"
+date-released: "2026-10-29"
 license: MIT
-repository-code: "https://github.com/dbajnok99/MasterThesis"
-url: "https://github.com/dbajnok99/MasterThesis"
+repository-code: "https://github.com/dbajnok99/mas-security-testbed"
+url: "https://github.com/dbajnok99/mas-security-testbed"
 doi: ""
 keywords:
   - LLM

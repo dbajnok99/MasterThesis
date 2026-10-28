@@ -20,5 +20,12 @@
     "memory poisoning",
     "data exfiltration",
     "defense evaluation"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/dbajnok99/mas-security-testbed",
+      "relation": "isSupplementTo",
+      "resource_type": "software"
+    }
   ]
 }
