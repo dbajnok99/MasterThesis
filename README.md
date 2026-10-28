@@ -230,7 +230,9 @@ logs/                   committed benchmark results (other run logs git-ignored)
 
 If you use this testbed, please cite the archived release (see `CITATION.cff`):
 
-> Bajnok, Dénes Ágoston. *Securing Agentic Architectures: A Deliberately Vulnerable Multi-Agent LLM Testbed*, v1.0.0. GitHub: <https://github.com/dbajnok99/mas-security-testbed> (to be archived on Zenodo with a permanent DOI upon publication).
+> Bajnok, Dénes Ágoston. *Securing Agentic Architectures: A Deliberately Vulnerable Multi-Agent LLM Testbed*, v1.0.0, 2026. Zenodo. <https://doi.org/10.5281/zenodo.23725403>. Source: <https://github.com/dbajnok99/mas-security-testbed>.
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23725403.svg)](https://doi.org/10.5281/zenodo.23725403)
 
 ## References
 

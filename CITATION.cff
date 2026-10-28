@@ -21,7 +21,7 @@ date-released: "2026-10-29"
 license: MIT
 repository-code: "https://github.com/dbajnok99/mas-security-testbed"
 url: "https://github.com/dbajnok99/mas-security-testbed"
-doi: ""
+doi: "10.5281/zenodo.23725403"
 keywords:
   - LLM
   - multi-agent systems
