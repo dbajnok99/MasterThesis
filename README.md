@@ -76,7 +76,7 @@ Create a `.env` file in the project root with keys for whichever providers you w
 ```
 # Only the provider(s) you actually run need a key.
 OPENAI_API_KEY=sk-...          # gpt-4o, gpt-4o-mini
-ANTHROPIC_API_KEY=sk-ant-...   # claude-sonnet-4-6, claude-haiku-4-5
+ANTHROPIC_API_KEY=sk-ant-...   # claude-sonnet-4-6, claude-haiku-4-5-20251001
 DEEPSEEK_API_KEY=...           # deepseek-* (optional)
 OLLAMA_BASE_URL=http://localhost:11434/v1   # local open-weight models, no key needed
 ```
@@ -104,7 +104,7 @@ python main.py run "summarise the sandbox files" --model claude-sonnet-4-6 --def
 python main.py chat --log logs/session.jsonl
 ```
 
-Each run produces a JSON log with the full event trace, tool calls, and memory state.
+With `--log`, a run writes a JSON log with the full event trace, tool calls, and memory state.
 
 The `run`, `chat`, and `attack` commands all accept `--model MODEL` to override `MAS_MODEL` and `--defend {canary,intent-anchor,plan-diff,spotlight,trust}` (repeatable) to enable defences.
 
@@ -116,9 +116,9 @@ Five defences can be switched on individually or in any combination with `--defe
 |---|---|---|
 | Canary tokens | `canary` | Seeds fake secrets into shared memory and one token line into `credentials.txt`, then scans the final answer and all tool arguments and outputs after the run for any that leaked. Detects, does not prevent. |
 | Intent anchoring | `intent-anchor` | Extracts the user's original intent at planning time and drops any subtask that does not match it. |
-| Counterfactual plan diffing | `plan-diff` | Re-plans the task without the (possibly poisoned) shared-memory context and removes subtasks that only appear in the memory-augmented plan. |
+| Counterfactual plan diffing | `plan-diff` | Re-plans the task without the (possibly poisoned) shared-memory context, then asks the model which subtasks of the memory-augmented plan are not justified by the task, and drops those. |
 | Output spotlighting | `spotlight` | Base64-encodes every tool output and every shared-memory entry before the model sees it, and tells the worker agents to decode such content but never follow instructions inside it. |
-| Trust hierarchy | `trust` | Labels each shared-memory entry by provenance (which agent wrote it, what kind of data it holds) and keeps low-trust, environment-derived content out of the planner's decomposition. Deterministic, no extra LLM calls. |
+| Trust hierarchy | `trust` | Classifies each shared-memory entry by provenance (which agent wrote it, what kind of data it holds), marks environment-level entries as untrusted for the workers, and keeps them out of the planner's decomposition. Deterministic, no extra LLM calls. |
 
 ## Attack Scenarios
 
@@ -171,6 +171,12 @@ python -m experiments.runner
 
 # Choose which models to evaluate
 python -m experiments.runner --models gpt-4o claude-sonnet-4-6 ollama:qwen2.5:7b
+
+# Re-measure only some cells of an existing results file (keeps everything else):
+# select the attacks and conditions and add --redo
+python -m experiments.runner --models gpt-4o gpt-4o-mini claude-sonnet-4-6 claude-haiku-4-5-20251001 \
+    deepseek-flash deepseek-v4-pro --attacks tool_result_poisoning --conditions spotlight all \
+    --redo --skip-benign --out logs/results_paid_api.json
 
 # Regenerate every result table the thesis includes, from both result logs
 # (writes tables_*.tex and appendix_permodel_*.tex into thesis/chapters/, or --out DIR)

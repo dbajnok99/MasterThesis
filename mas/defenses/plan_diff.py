@@ -1,7 +1,8 @@
 """
 Counterfactual plan diff defense: run the planner twice for the same task,
-once with shared memory context and once without. Subtasks that appear only
-in the memory-influenced plan are likely injected and get removed.
+once with shared memory context and once without. An LLM then names the
+subtasks of the memory plan that are not present in or required by the task;
+those are removed before dispatch.
 """
 from __future__ import annotations
 

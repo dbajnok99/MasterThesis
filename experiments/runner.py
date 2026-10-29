@@ -23,6 +23,13 @@ Usage:
   # If a run gets interrupted, re-run the exact same command with the same
   # --out file: it resumes automatically, skipping completed trials and
   # retrying any that errored. Use --fresh to discard a previous file instead.
+
+  # To re-measure only some cells of an existing results file (for example after
+  # fixing an attack), select them and add --redo: the matching attack trials are
+  # dropped and run again, everything else in the file is kept.
+  python -m experiments.runner --models <all models of that file> \
+      --attacks tool_result_poisoning --conditions spotlight all --redo --skip-benign \
+      --out logs/results_free_local.json
 """
 from __future__ import annotations
 
@@ -409,7 +416,22 @@ def parse_args() -> argparse.Namespace:
                         "The thesis runs are logs/results_paid_api.json and logs/results_free_local.json.")
     p.add_argument("--fresh", action="store_true",
                    help="Ignore any existing --out file and start over, instead of resuming it.")
+    p.add_argument("--redo", action="store_true",
+                   help="Drop the existing attack trials of the selected --attacks x --conditions "
+                        "(for the selected --models) from the --out file and run them again.")
     return p.parse_args()
+
+
+def drop_trials(results: dict, models: list[str], attacks: list[str],
+                conditions: list[tuple[str, list[str]]]) -> int:
+    """Remove attack trials matching models x attacks x conditions. Returns how many were dropped."""
+    selected = {(m, a, tuple(d)) for m in models for a in attacks for _, d in conditions}
+    before = len(results["attack_trials"])
+    results["attack_trials"] = [
+        t for t in results["attack_trials"]
+        if (t.get("model"), t.get("attack"), tuple(t.get("defense") or [])) not in selected
+    ]
+    return before - len(results["attack_trials"])
 
 
 def _attack_trial_key(t: dict) -> tuple:
@@ -449,6 +471,10 @@ def main() -> None:
         n_after = len(results["attack_trials"]) + len(results["benign_trials"])
         print(f"Resuming {out_path}: {n_after} completed trials found "
               f"({n_before - n_after} previously-errored trials will be retried).")
+        if args.redo:
+            dropped = drop_trials(results, args.models, args.attacks, selected_conditions)
+            print(f"--redo: dropped {dropped} existing attack trials of the selected cells; "
+                  f"they will be run again.")
     else:
         results = {
             "meta": {

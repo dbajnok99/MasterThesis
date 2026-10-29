@@ -8,8 +8,8 @@ unknown writer) are hidden from it, and the worker agents see them wrapped as
 <untrusted> data.
 
 This puts the trust order from the thesis background (Trust Hierarchy) into the
-system itself, instead of hoping the model respects it: a malicious instruction
-sitting in shared memory can never turn into a plan step.
+system itself, instead of hoping the model respects it: an environment-level
+entry in shared memory never reaches the planner's decomposition.
 """
 from __future__ import annotations
 
