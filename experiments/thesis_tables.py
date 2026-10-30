@@ -72,7 +72,6 @@ DERAIL_PATTERN = re.compile(r"decod|base64|encoded", re.IGNORECASE)
 # tool_result_poisoning patches get_weather.func after the Orchestrator is built,
 # but spotlight_tools() already captured the original function, so under
 # spotlighting the poisoned output is never returned.
-NOT_MEASURED = {("tool_result_poisoning", "spotlight"), ("tool_result_poisoning", "all")}
 DEFENCES = [c for c in DEFENSE_ORDER if c != "none"]
 
 
@@ -151,8 +150,7 @@ class Run:
                 continue
             key = (t["model"], t["attack"], DEFENSE_TO_COND[tuple(t["defense"])])
             self.canary[key].append(bool(t.get("canary_hit")))
-            if (t["attack"], key[2]) not in NOT_MEASURED:
-                self.asr[key].append(bool(t["success"]))
+            self.asr[key].append(bool(t["success"]))
         for t in data["benign_trials"]:
             if t.get("error"):
                 continue
@@ -173,9 +171,8 @@ class Run:
         return mean([self.model_asr(m, c, attacks) for m in (models or self.models)])
 
     def de(self, c, models=None):
-        """Defence effectiveness against the undefended baseline on the same attacks."""
-        measured = [a for a in ATTACKS if (a, c) not in NOT_MEASURED]
-        return 1 - self.group_asr(c, models, measured) / self.group_asr("none", models, measured)
+        """Defence effectiveness against the undefended baseline."""
+        return 1 - self.group_asr(c, models) / self.group_asr("none", models)
 
     def attack_asr(self, a, c, models=None):
         return mean([self.rate(self.asr, m, a, c) for m in (models or self.models)])
@@ -235,8 +232,7 @@ def cond_header(first: str, conds) -> list[str]:
 def overview_table(run: Run, group: str, gkey: str):
     table_head(
         f"Mean attack success rate per model and defence condition, {group}, over the seven "
-        f"attacks ($N = 70$ trials per cell), or over six for Spotlight and All, where Tool "
-        f"Result Poisoning was not measured. DE compares each condition with the undefended "
+        f"attacks ($N = 70$ trials per cell). DE compares each condition with the undefended "
         f"baseline on the same attacks; n/a marks the baseline itself.",
         f"tab:overview-{gkey}", "l" + "r" * len(DEFENSE_ORDER), cond_header("Model", DEFENSE_ORDER),
         short=f"Mean attack success rate per model and defence condition, {group}")
@@ -256,12 +252,11 @@ def overview_table(run: Run, group: str, gkey: str):
 
 def per_attack_table(run: Run, group: str, gkey: str):
     table_head(
-        f"Attack success rate per attack and defence condition, averaged over the {group}. "
-        f"n/m: not measured (see Section~\\ref{{sec:eval-threats}}).",
+        f"Attack success rate per attack and defence condition, averaged over the {group}.",
         f"tab:attack-cond-{gkey}", "l" + "r" * len(DEFENSE_ORDER), cond_header("Attack", DEFENSE_ORDER))
     for a in ATTACKS:
         print(f"    {ATTACK_LABELS[a]} & " + " & ".join(
-            "n/m" if (a, c) in NOT_MEASURED else f2(run.attack_asr(a, c)) for c in DEFENSE_ORDER) + r" \\")
+            f2(run.attack_asr(a, c)) for c in DEFENSE_ORDER) + r" \\")
     table_foot()
 
 
@@ -279,15 +274,11 @@ def per_model_asr_tables(run: Run):
     for m in run.models:
         table_head(
             f"Attack success rate per attack and defence condition, {display(m)}, with the "
-            f"95\\% Wilson confidence interval ($N = 10$ trials per cell). Bold marks a cell with an ASR of 0; "
-            f"n/m marks a cell that was not measured.",
+            f"95\\% Wilson confidence interval ($N = 10$ trials per cell). Bold marks a cell with an ASR of 0.",
             f"tab:asr-results-{slug(m)}", "l" + "c" * len(DEFENSE_ORDER), cond_header("Attack", DEFENSE_ORDER))
         for a in ATTACKS:
             cells = []
             for c in DEFENSE_ORDER:
-                if (a, c) in NOT_MEASURED:
-                    cells.append("n/m")
-                    continue
                 v = run.asr[(m, a, c)]
                 lo, hi = wilson_ci(sum(v), len(v))
                 val = f"{sum(v) / len(v):.2f}"

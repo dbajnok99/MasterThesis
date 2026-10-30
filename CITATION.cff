@@ -16,12 +16,12 @@ authors:
   - family-names: Bajnok
     given-names: "Dénes Ágoston"
     affiliation: "TU Wien"
-version: 1.0.0
-date-released: "2026-10-29"
+version: 1.0.1
+date-released: "2026-10-30"
 license: MIT
 repository-code: "https://github.com/dbajnok99/mas-security-testbed"
 url: "https://github.com/dbajnok99/mas-security-testbed"
-doi: "10.5281/zenodo.23725403"
+doi: "10.5281/zenodo.23725402"
 keywords:
   - LLM
   - multi-agent systems
